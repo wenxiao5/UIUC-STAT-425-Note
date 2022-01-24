@@ -1,0 +1,122 @@
+---
+title: "HW9"
+author: "Wenxiao Yang"
+date: "11/15/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+# 2
+## (a)
+```{r}
+library(faraway)
+data(butterfat)
+head(butterfat)
+```
+The factor effects model is as follows:
+$$Y_{ijk}= \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij}+\varepsilon_{ijk} $$
+$Y_{ijk}$: butterfat for age $i$, breed $j$, cow $k$ 
+$\mu$ : mean butterfat for all samples
+$\alpha_{i}:$ effect of age $i$ on butterfat
+$\beta_{j}:$ effect of breed $j$ on butterfat
+$(\alpha \beta)_{i j}$ : interaction term
+The error terms satisfy the usual assumption $\varepsilon_{i j k} \sim \mathcal{N}\left(0, \sigma^{2}\right) .$
+Sum Constraints: $\sum_{i} \alpha_{i}=0, \sum_{j} \beta_{j} 0, \sum_{i}(\alpha \beta)_{i j}=\sum_{j}(\alpha \beta)_{i j}=0$
+
+## (b)
+```{r}
+interaction.plot(butterfat$Age, butterfat$Breed, butterfat$Butterfat)
+interaction.plot(butterfat$Breed, butterfat$Age, butterfat$Butterfat)
+```
+Some of the lines are intersect, so interactions are present.
+
+## (c)
+```{r}
+model1=lm(log(Butterfat)~Age*Breed,data=butterfat)
+anova(model1)
+```
+The hypothesis we test is
+$$
+\left\{\begin{array}{l}
+H_{0}:(\alpha \beta)_{i j}=0, \forall i, j \\
+H_{\alpha}: \text { not all }(\alpha \beta)_{i j}=0
+\end{array}\right.
+$$
+Since the $p$-value is large, we conclude that the interaction term is not statistically significant. So, we can remove it from the model.
+
+## (d)
+```{r}
+model2=lm(log(Butterfat)~Age+Breed,data=butterfat)
+```
+$$
+\left\{\begin{array}{l}
+H_{0}:Y_{ijk}= \mu  + \beta_ j+\varepsilon_{ijk} \\
+H_{\alpha}: Y_{ijk}= \mu + \alpha_ i + \beta_ j+\varepsilon_{ijk}
+\end{array}\right.
+$$
+```{r}
+model3=lm(log(Butterfat)~Breed,data=butterfat)
+anova(model3,model2)
+```
+The p-value is larger than 0.05, then we can't reject null hypothesis. So, we conclude that Age is statistically insigniﬁcant.
+
+$$
+\left\{\begin{array}{l}
+H_{0}:Y_{ijk}= \mu + \alpha_ i +\varepsilon_{ijk} \\
+H_{\alpha}: Y_{ijk}= \mu + \alpha_ i + \beta_ j+\varepsilon_{ijk}
+\end{array}\right.
+$$
+```{r}
+model4=lm(log(Butterfat)~Age,data=butterfat)
+anova(model4,model2)
+```
+The p-value is smaller than 0.05, then we reject null hypothesis. So, we conclude that Breed is statistically signiﬁcant.
+
+## (e)
+```{r}
+anova(model2)
+```
+$$D=\mu_{1.}-\mu_{2.}$$
+```{r}
+butterfat['logbutfat']=log(butterfat$Butterfat)
+mean.mature=mean(butterfat$logbutfat[butterfat$Age=="Mature"])
+mean.2year=mean(butterfat$logbutfat[butterfat$Age=="2year"])
+mean.mature-mean.2year
+```
+
+$$\hat{D}=\hat{Y}_{1..}-\hat{Y}_{2..}=0.02338223$$
+```{r}
+0.00745/25
+```
+
+$$MSE=0.00745, s^2_{\hat{D}}=\frac{2MSE}{10*5}=0.000298$$
+$$D\in0.02338223\pm T_{94}(0.05/2)\sqrt{0.000298}$$
+
+## (f)
+```{r}
+anova(model3)
+```
+```{r}
+summary(butterfat$Breed)
+```
+$$
+L=\frac{\mu_{1..}+\mu_{2..}}{2}-\frac{\mu_{3..}+\mu_{5..}}{2}
+$$
+```{r}
+mean.1=mean(butterfat$logbutfat[butterfat$Breed=="Ayrshire"])
+mean.2=mean(butterfat$logbutfat[butterfat$Breed=="Canadian"])
+mean.3=mean(butterfat$logbutfat[butterfat$Breed=="Guernsey"])
+mean.5=mean(butterfat$logbutfat[butterfat$Breed=="Jersey"])
+(mean.1+mean.2-mean.3-mean.5)/2
+```
+
+$$\hat{L}=\frac{1}{2} \bar{Y}_{1 . .}+\frac{1}{2} \bar{Y}_{2 . .}-\frac{1}{2} \bar{Y}_{3 . .}-\frac{1}{2} \bar{Y}_{5 \cdots}=-0.1843879$$
+$$s_{\hat{L}}^{2}=\frac{0.00752}{10*2}\left((1 / 2)^{2}+(1 / 2)^{2}+(1 / 2)^{2}+(1 / 2)^{2}\right)=0.000376$$
+So, the interval is
+$$
+L \in(-0.1843879 \pm T_{95}(0.05 / 2) \sqrt{0.000376})
+$$
+
+
+

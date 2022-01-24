@@ -1,0 +1,1369 @@
+%!TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{authblk}
+\usepackage{ctex}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{indentfirst}
+\usepackage{amssymb}
+\setlength{\parindent}{0pt}
+\usetikzlibrary{shapes,snakes}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\DeclareMathOperator{\col}{col}
+\usepackage{booktabs}
+\newtheorem{theorem}{Theorem}
+\newtheorem{note}{Note}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{example}{Example}
+\newtheorem{corollary}{Corollary}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\newcommand{\code}{	exttt}
+\geometry{a4paper,scale=0.8}
+\title{STAT R note}
+\author[*]{Wenxiao Yang}
+\affil[*]{Department of Mathematics, University of Illinois at Urbana-Champaign}
+\date{2021}
+
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{numbers=left,numberstyle=\tiny,keywordstyle=\color{blue},commentstyle=\color[cmyk]{1,0,1,0},frame=single,escapeinside=``,extendedchars=false,xleftmargin=2em,xrightmargin=2em,aboveskip=1em,tabsize=4,showspaces=false}
+
+
+
+
+
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Basic}
+\subsection{q-value of $\chi^2_n$}
+\begin{lstlisting}[language=R]
+qchisq(0.95, n)
+\end{lstlisting}
+\subsection{读取数据 txt (galton)}
+\begin{lstlisting}[language=R]
+galton <- read.table("Galton.txt", header=TRUE)
+\end{lstlisting}
+\subsection{读取数据 csv (bikeshares)}
+\begin{lstlisting}[language=R]
+bikeshares <-  read.csv("BikeShares.csv", header=TRUE)
+#分隔符为";"
+whitewines.data<-read.csv("whitewines.csv",sep=";",header = TRUE)
+\end{lstlisting}
+\subsection{查看数据维度 (bikeshares)}
+\begin{lstlisting}[language=R]
+dim(bikeshares)
+## [1] 17414    10
+\end{lstlisting}
+
+\subsection{数据中删除列 (bikeshares)}
+\begin{lstlisting}[language=R]
+# We remove columns 1,  7, 8, 9, 10:
+bikeshares.reg = bikeshares[,c(-1,-7,-8,-9,-10)] #-i即删除i列
+head(bikeshares.reg)
+##   cnt  t1  t2   hum wind_speed
+## 1 182 3.0 2.0  93.0        6.0
+## 2 138 3.0 2.5  93.0        5.0
+## 3 134 2.5 2.5  96.5        0.0
+## 4  72 2.0 2.0 100.0        0.0
+## 5  47 2.0 0.0  93.0        6.5
+## 6  46 2.0 2.0  93.0        4.0
+\end{lstlisting}
+
+
+\subsection{数据“列”处理：赋值，条件选中 (galton)}
+\begin{lstlisting}[language=R]
+# Define the Adjusted Heigth Variable (according to Galton)
+galton$AH <- galton$Height
+galton$AH[galton$Gender=="F"]<-galton$Height[galton$Gender=="F"]*1.08
+galton$MP <- (galton$Father + 1.08*galton$Mother)/2
+head(galton)
+##   Family Father Mother Gender Height Kids     AH    MP
+## 1      1   78.5   67.0      M   73.2    4 73.200 75.43
+## 2      1   78.5   67.0      F   69.2    4 74.736 75.43
+## 3      1   78.5   67.0      F   69.0    4 74.520 75.43
+## 4      1   78.5   67.0      F   69.0    4 74.520 75.43
+## 5      2   75.5   66.5      M   73.5    4 73.500 73.66
+## 6      2   75.5   66.5      M   72.5    4 72.500 73.66
+\end{lstlisting}
+
+\subsection{查看数据类型 (bikeshare)}
+\begin{lstlisting}[language=R]
+class(numeric(n.iter))
+## [1] "numeric"
+class(bikeshares.reg)
+## [1] "data.frame"
+\end{lstlisting}
+
+
+\subsection{data.frame}
+\subsubsection{修改列名}
+\begin{lstlisting}[language=R]
+names(myCR) = c("t1","hum");
+\end{lstlisting}
+\subsubsection{data.frame列拼接cbind() (bikeshares)}
+\begin{lstlisting}[language=R]
+bikeshare.mlr1$fitted[1:5]
+## 1         2         3         4         5 
+## 158.12967 152.85747  42.50091 -77.95731 126.47427 
+bikeshare.mlr1$residuals[1:5]
+## 1         2         3         4         5 
+## 23.87033 -14.85747  91.49909 149.95731 -79.47427 
+cbind(bikeshare.mlr1$fitted[1:5], bikeshare.mlr1$residuals[1:5])
+##        [,1]      [,2]
+## 1 158.12967  23.87033
+## 2 152.85747 -14.85747
+## 3  42.50091  91.49909
+## 4 -77.95731 149.95731
+## 5 126.47427 -79.47427
+\end{lstlisting}
+\subsubsection{data.frame行拼接rbind() (bikeshares)}
+\begin{lstlisting}[language=R]
+rbind(bikeshare.mlr1$fitted[1:5], bikeshare.mlr1$residuals[1:5])
+## 1         2        3         4         5
+## [1,] 158.12967 152.85747 42.50091 -77.95731 126.47427
+## [2,]  23.87033 -14.85747 91.49909 149.95731 -79.47427
+\end{lstlisting}
+\subsubsection{data.frame抽样}
+\begin{lstlisting}[language=R]
+head(bikeshares.reg)
+##      cnt t1  t2  hum     wind_speed
+## 1	182	3.0	2.0	93.0	6.0
+## 2	138	3.0	2.5	93.0	5.0
+## 3	134	2.5	2.5	96.5	0.0
+## 4	72	2.0	2.0	100.0	0.0
+## 5	47	2.0	0.0	93.0	6.5
+## 6	46	2.0	2.0	93.0	4.0
+bikeshares.reg[sample(5), c(3,4)] #前五行（第3，4列）中随机抽样
+##      t2  hum
+## 2	2.5	93.0
+## 5	0.0	93.0
+## 3	2.5	96.5
+## 1	2.0	93.0
+## 4	2.0	100.0
+\end{lstlisting}
+
+\subsection{集体求均值}
+\begin{lstlisting}[language=R]
+apply(bikeshares.reg,2,mean)
+## cnt         t1         t2        hum wind_speed 
+## 1143.10164   12.46809   11.52084   72.32495   15.91306 
+\end{lstlisting}
+
+
+
+
+
+\subsection{numeric}
+\subsubsection{numeric(k): 生成k个0的numeric}
+\begin{lstlisting}[language=R]
+numeric(5)
+## [1] 0 0 0 0 0
+class(numeric(5))
+## [1] "numeric"
+\end{lstlisting}
+\subsubsection{numeric 数值修改}
+\begin{lstlisting}[language=R]
+A=numeric(5)
+A[1]=2
+A
+## [1] 2 0 0 0 0
+\end{lstlisting}
+\subsection{matrix}
+\subsubsection{data.frame 转成 matrix}
+\begin{lstlisting}[language=R]
+M=data.matrix(X)
+\end{lstlisting}
+
+\subsubsection{修改列名}
+\begin{lstlisting}[language=R]
+colnames(x)=c("t1", "t2", "hum")
+\end{lstlisting}
+
+\subsubsection{去掉矩阵 列/行 的名字}
+\begin{lstlisting}[language=R]
+rownames(A)<-NULL
+colnames(A)<-NULL
+\end{lstlisting}
+
+\subsubsection{自己创建matrix}
+\begin{lstlisting}[language=R]
+A=matrix(1:12,nrow=3,ncol=4)
+A
+##      [,1] [,2] [,3] [,4]
+## [1,]    1    4    7   10
+## [2,]    2    5    8   11
+## [3,]    3    6    9   12
+\end{lstlisting}
+\subsubsection{Transpose of matrix 转置矩阵}
+\begin{lstlisting}[language=R]
+t(A)
+##       [,1] [,2] [,3]
+## [1,]    1    2    3
+## [2,]    4    5    6
+## [3,]    7    8    9
+## [4,]   10   11   12
+\end{lstlisting}
+\subsubsection{Multiplication of matrix 矩阵乘法}
+\begin{lstlisting}[language=R]
+A%*%t(A)
+##     [,1] [,2] [,3]
+## [1,]  166  188  210
+## [2,]  188  214  240
+## [3,]  210  240  270
+\end{lstlisting}
+\subsubsection{解$Ax=b$: solve(A,b)}
+Solve $ax=b$
+\begin{lstlisting}[language=R]
+A.data=data.frame(a=c(1,43,765,9),b=c(2,455,787,2),
+                c=c(213,434,67,24),d=c(672,332,7,123))
+A=data.matrix(A.data)
+b=matrix(c(1,10,8,9))
+solve(A,b)
+##      [,1]
+## a -0.6723499
+## b  0.7380811
+## c -0.9034118
+## d  0.2866412
+\end{lstlisting}
+
+\subsubsection{矩阵行列式 : det()}
+\begin{lstlisting}[language=R]
+det(A)
+\end{lstlisting}
+\subsubsection{生成对角阵：diag(1,2,3,4)}
+\begin{lstlisting}[language=R]
+diag(c(1,2,3,4))
+##     [,1] [,2] [,3] [,4]
+## [1,]    1    0    0    0
+## [2,]    0    2    0    0
+## [3,]    0    0    3    0
+## [4,]    0    0    0    4
+\end{lstlisting}
+\subsubsection{提取对角线上的元素：diag()}
+\begin{lstlisting}[language=R]
+diag(A)
+## [1]   1 455  67 123
+\end{lstlisting}
+\subsubsection{特征值和特征向量：eigen()}
+\begin{lstlisting}[language=R]
+eigen(A)
+## eigen() decomposition
+## $values
+## [1]  962.54862 -533.15335  195.96895   20.63578
+## 
+## $vectors
+##             [,1]        [,2]       [,3]       [,4]
+## [1,] -0.18050353 -0.31476395  0.7098847  0.5218457
+## [2,] -0.65689212 -0.36245740 -0.6561850 -0.5428550
+## [3,] -0.73165231  0.87683413  0.2141936  0.6319310
+## [4,] -0.02441547 -0.02664961  0.1400217 -0.1834356
+\end{lstlisting}
+
+\subsubsection{逆矩阵 solve(A)}
+\begin{lstlisting}[language=R]
+solve(A)
+##      [,1]          [,2]          [,3]        [,4]
+## [1,]  0.015470466 -0.0038533021  0.0023771584 -0.07425607
+## [2,] -0.016656510  0.0038972675 -0.0011449021  0.08054712
+## [3,]  0.019498924 -0.0018420827  0.0012737127 -0.10163107
+## [4,] -0.004665816  0.0005780095 -0.0004038514  0.03208420
+\end{lstlisting}
+
+\subsubsection{列或行的函数处理 $apply(A,1/2,func)$}
+\begin{lstlisting}[language=R]
+apply(A,1,mean) #1表示对行求均值
+apply(A,2,mean) #2表示对列求均值
+apply(x,2,sd)
+apply(x,2,var)
+\end{lstlisting}
+
+
+\section{Simple Linear Regression}
+\subsection{拟合slr (galton)}
+\begin{lstlisting}[language=R]
+# Simple Linear Regression
+slr.fit <- lm(AH ~ MP, data=galton)
+summary(slr.fit)
+## 
+## Call:
+## lm(formula = AH ~ MP, data = galton)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -9.4947 -1.4779  0.0995  1.5175  9.1262 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 18.76698    2.84062   6.607 6.74e-11 ***
+## MP           0.72906    0.04102  17.772  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 01 ' ' 1
+## 
+## Residual standard error: 2.233 on 896 degrees of freedom
+## Multiple R-squared:  0.2606, Adjusted R-squared:  02598 
+## F-statistic: 315.9 on 1 and 896 DF,  p-value: < 2.2e-16
+\end{lstlisting}
+
+\subsection{Summary中提取R-square (galton)}
+\begin{lstlisting}[language=R]
+summary(slr.fit)$r.square
+\end{lstlisting}
+\subsection{Summary中提取coefficients (galton)}
+\begin{lstlisting}[language=R]
+galton.coef = summary(slr.fit)$coef
+galton.coef
+##               Estimate Std. Error   t value     Pr(>|t|)
+## (Intercept) 18.7669821 2.84062068  6.606648 6.735528e-11
+## MP           0.7290562 0.04102226 17.772211 9.224505e-61
+
+galton.coef[2,1]
+galton.coef[2,3]  ## 提取t-test
+\end{lstlisting}
+
+\subsection{回归中提取 degrees of freedom (galton)}
+\begin{lstlisting}[language=R]
+slr.fit$df
+## [1] 896
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Hypothesis test}
+\subsubsection{p-value of t-test (galton)}
+\begin{lstlisting}[language=R]
+# pt(t-statistics, df)
+# $H_0:\beta_1=0$, 由于检验0对称，我们需要乘2
+2*pt(-galton.coef[2,1]/galton.coef[2,2], 896)
+## [1] 9.224505e-61
+\end{lstlisting}
+
+\subsubsection{Critical value of $\alpha=0.05$ in t(n)}
+\begin{lstlisting}[language=R]
+qt(.05, n)
+## -1.644941
+\end{lstlisting}
+
+\subsubsection{ANOVA(F-test) (HW1)}
+\begin{lstlisting}[language=R]
+grade.anova=anova(slr.fit)
+grade.anova
+## Analysis of Variance Table
+##
+## Response: final
+##              Df  SumSq  MeanSq  F value Pr(>F)
+## QuizAverage   1  69812   69812  423.19 < 2.2e-16 ***
+## Residuals   380  62687     165
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+grade.anova[1,4]   ## 提取F- value from ANOVA Table
+\end{lstlisting}
+
+\subsubsection{p-value of F-test (HW1)}
+\begin{lstlisting}[language=R]
+pf(grade.anova[1,4],df1=1,df2=380,lower.tail = FALSE)
+# lower.tail: if TRUE (default), probabilities are P[X $\leq$ x],
+# otherwise, P[X > x].
+\end{lstlisting}
+
+\subsubsection{Critical value of $\alpha=0.05$ in F(p,n)}
+\begin{lstlisting}[language=R]
+qf(.05, p, n, lower.tail = FALSE)
+\end{lstlisting}
+
+\subsection{Confidence interval 置信区间 (HW1)}
+\begin{lstlisting}[language=R]
+confint(slr.fit, 'QuizAverage', level=0.9)
+##            5 %      95 %
+##QuizAverage 0.7880018 0.9253306
+\end{lstlisting}
+
+
+
+
+
+
+
+\subsection{Prediction}
+\subsubsection{模型带入数据 (galton)}
+\begin{lstlisting}[language=R]
+predict(slr.fit, newdata=data.frame(MP=70))
+##        1 
+## 69.80092
+\end{lstlisting}
+\subsubsection{Confidence interval (HW1) $
+\hat{\beta}_{0}+\hat{\beta}_{1} x^{\star} \pm T_{n-2}(\alpha / 2) \hat{\sigma} \sqrt{\frac{1}{n}+\frac{\left(x^{\star}-\bar{x}\right)^{2}}{S_{x x}}}
+$}
+\begin{lstlisting}[language=R]
+predict(slr.fit,newdata = data.frame(QuizAverage=85),
+interval = 'confidence', level=0.9)
+##        fit     lwr      upr
+## 1 76.7638 75.44682 78.08077
+\end{lstlisting}
+\subsubsection{Prediction interval (HW1) $
+\hat{\beta}_{0}+\hat{\beta}_{1} x^{\star} \pm T_{n-2}(\alpha / 2) \hat{\sigma} \sqrt{1+\frac{1}{n}+\frac{\left(x^{\star}-\bar{x}\right)^{2}}{S_{x x}}}
+$}
+\begin{lstlisting}[language=R]
+predict(slr.fit,newdata = data.frame(QuizAverage=85),
+interval = 'prediction', level=0.9)
+##        fit      lwr      upr
+## 1 76.7638 55.54486 97.98273
+\end{lstlisting}
+
+
+\section{Multiple Linear Regression}
+\subsection{拟合mlr (bikeshares)}
+\begin{lstlisting}[language=R]
+bikeshare.mlr1 = lm(cnt ~ t1 + t2 + hum + wind_speed,
+                                        data=bikeshares.reg )
+summary(bikeshare.mlr1)
+## 
+## Call:
+## lm(formula = cnt ~ t1 + t2 + hum + wind_speed,
+##                                      data = bikeshares.reg)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1970.1  -602.7  -252.7   332.6  6007.4 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 2582.5618    64.7237  39.901  < 2e-16 ***
+## t1            66.1963     9.4206   7.027 2.19e-12 ***
+## t2           -18.2313     7.7565  -2.350 0.018762 *  
+## hum          -27.5645     0.5865 -46.999  < 2e-16 ***
+## wind_speed    -3.8435     0.9899  -3.883 0.000104 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 936 on 17409 degrees of freedom
+## Multiple R-squared:  0.2562, Adjusted R-squared:  0.256 
+## F-statistic:  1499 on 4 and 17409 DF,  p-value: < 2.2e-16
+\end{lstlisting}
+
+\subsection{Update regression, add or delete predictor}
+\begin{lstlisting}[language=R]
+rat.lm_body = update(rat.lm, ~ liver+dose)
+rat.lm_body = lm(Y~liver+dose, data = rat)
+# 两者等价
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+\subsection{回归中提取residuals, fitted values (bikeshare)}
+\begin{lstlisting}[language=R]
+bikeshare.mlr1$res
+bikeshare.mlr$residuals
+bikeshare.mlr$fitted.values
+\end{lstlisting}
+\subsection{Summary中提取F-test statitic}
+\begin{lstlisting}[language=R]
+summary(bikeshare.mlr1)$fstat
+## value    numdf   dendf
+## 1499.07  4.00    17409.00
+summary(bikeshare.mlr1)$fstat[1]
+## 1499.07
+\end{lstlisting}
+\subsubsection{得到RSS: $\sum_{i=1}^nr_i^2$}
+\begin{lstlisting}[language=R]
+sum(bikeshare.mlr1$res^2) #方法1
+deviance(bikeshare.mlr1)  #方法2
+\end{lstlisting}
+
+
+
+\subsection{Correlation matrix (bikeshares) $cor()$}
+\begin{lstlisting}[language=R]
+cor(bikeshares.reg[,-1]) #这里[,-1]是不想算第一列
+##                    t1          t2        hum  wind_speed
+## t1          1.0000000  0.98834422 -0.4477810  0.14547097
+## t2          0.9883442  1.00000000 -0.4034951  0.08840854
+## hum        -0.4477810 -0.40349514  1.0000000 -0.28778917
+## wind_speed  0.1454710  0.08840854 -0.2877892  1.00000000
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
+round(cor(seatpos), dig=2)
+# 打印出来的数据保留两位小数
+\end{lstlisting}
+\subsection{Plot all pairs of variables}
+\begin{lstlisting}[language=R]
+pairs(rat)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.5]{rat1.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+
+
+
+
+
+\subsection{Partial $F-$Tests (bikeshare)}
+\begin{lstlisting}[language=R]
+bikeshare.mlr.full = lm(cnt ~ t1 + t2+ hum + wind_speed,
+                        data=bikeshares.reg ) #先回归full model
+bikeshare.mlr.reduced = lm(cnt ~ hum + wind_speed ,
+                        data=bikeshares.reg ) #回归reduced model
+anova(bikeshare.mlr.reduced, bikeshare.mlr.full)
+                            #do the partial F-test by "anova(.)"
+## Analysis of Variance Table
+## 
+## Model 1: cnt ~ hum + wind_speed
+## Model 2: cnt ~ t1 + t2 + hum + wind_speed
+##   Res.Df        RSS Df Sum of Sq      F    Pr(>F)
+## 1  17411 1.6103e+10
+## 2  17409 1.5250e+10  2 853010396 486.88 < 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{lstlisting}
+Sum of Square $853010396$ 是 $RSS_0-RSS_\alpha=1.6103e+10-1.5250e+10=853010396$\\
+我们也可以按照公式算：
+\begin{lstlisting}[language=R]
+rss.full = sum(bikeshare.mlr.full$res^2)
+# You can also compute it with
+# deviance(bikeshare.mlr.full)
+rss.reduced = sum(bikeshare.mlr.reduced$res^2)
+# deviance(bikeshare.mlr.reduced)
+Fstat = (rss.reduced - rss.full)/2/(rss.full/17409)
+Fstat
+## [1] 486.8763
+1-pf(Fstat, 2, 17409)
+## [1] 0
+\end{lstlisting}
+
+\subsection{Permutation Tests (bikeshares)}
+\[\begin{cases}
+    &H_0: bikeshares \sim humidity + windspeed\\
+    &H_{\alpha}: bikeshares \sim RealTemp + FeelsLikeTemp + humidity + windspeed
+    \end{cases}\]
+If \textit{RealTemp} and \textit{FeelsLikeTemp} are insignificant (Under $H_0$), the F-statstic of regression model will not be affected by switching the orders of these two data. Then new F-statistic will be equal(or less) to the old. i.e. High new F-statistic is more extreme than $H_0$. So lower $p-$value will support $H_\alpha:$ \textit{RealTemp} and \textit{FeelsLikeTemp} are significant.
+\begin{lstlisting}[language=R]
+n.iter = 2000;
+fstats = numeric(n.iter);
+for(i in 1:n.iter){
+  newbikes = bikeshares.reg;
+  newbikes[, c(3,4)] = bikeshares.reg[sample(17414), c(3,4)];
+  ge = lm(cnt ~ t1 + t2+ hum + wind_speed, data=newbikes);
+  fstats[i] = summary(ge)$fstat[1]
+}
+
+# Estimated p-value
+length(fstats[fstats > summary(bikeshare.mlr.full)$fstat[1]])/n.iter
+## [1] 0
+\end{lstlisting}
+
+\subsection{Confidence/Prediction Interval}
+\subsubsection{Estimators' Confidence Interval}
+\begin{lstlisting}[language=R]
+confint(bikeshare.mlr)
+##                   2.5 %      97.5 %
+## (Intercept) 2543.679114 2766.669772
+## t1            41.516598   47.099480
+## hum          -28.984942  -26.739780
+## wind_speed    -4.941603   -1.262794
+confint(bikeshare.mlr, 't1', level=0.99)
+##       0.5 %   99.5 %
+## t1 40.63932 47.97676
+\end{lstlisting}
+
+\subsubsection{Estimators' Confidence regions}
+\begin{lstlisting}[language=R]
+library(ellipse)
+library(ggplot2)
+CR95 = ellipse(bikeshare.mlr, c(2,3))
+CR99 = ellipse(bikeshare.mlr, c(2,3), level=0.99)
+CR998 = ellipse(bikeshare.mlr, c(2,3), level=0.998)
+# Plot Confidence Regions for column 2,3
+dim(CR95)
+## [1] 100   2
+head(CR95)
+##            t1       hum
+## [1,] 47.25426 -26.67754
+## [2,] 47.13012 -26.63239
+## [3,] 46.99462 -26.59219
+## [4,] 46.84830 -26.55710
+## [5,] 46.69175 -26.52728
+## [6,] 46.52561 -26.50282
+\end{lstlisting}
+\begin{lstlisting}[language=R]
+myCR = rbind(CR95, CR99, CR998);
+# 行连接
+myCR = data.frame(myCR); 
+names(myCR) = c("t1","hum"); 
+myCR[, 'level']=as.factor(c(rep(0.95, dim(CR95)[1]), 
+                              rep(0.99, dim(CR99)[1]), 
+                              rep(0.998, dim(CR998)[1])));
+# 添加列‘level', 给各行根据精度赋值
+
+ggplot(data=myCR, aes(x=t1, y=hum, colour=level)) + 
+  geom_path(aes(linetype=level), size=1.5) + 
+  geom_point(x=coef(bikeshare.mlr)[2], y=coef(bikeshare.mlr)[3]
+  , shape=3, size=3, colour='red') + 
+  geom_point(x=0, y=0, shape=1, size=3, colour='red') 
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.5]{9599998.png}
+    \caption{}
+    \label{}
+\end{figure}\end{center}
+
+\subsubsection{Confidence Interval for new observation}
+\begin{lstlisting}[language=R]
+x=data.frame(t(meanvalue))
+predict.lm(bikeshare.mlr,x,interval="confidence",level=0.95)
+##        fit      lwr      upr
+## 1 1143.102 1129.198 1157.006
+\end{lstlisting}
+\subsubsection{Prediction Interval for new observation}
+\begin{lstlisting}[language=R]
+predict.lm(bikeshare.mlr,x,interval="prediction",level=0.95)
+##        fit       lwr      upr
+## 1 1143.102 -691.7461 2977.949
+\end{lstlisting}
+
+\subsection{Unusual Observation}
+\subsubsection{Leverage Points}
+\begin{lstlisting}[language=R]
+lev=influence(bikeshare.mlr)$hat
+# H matrix 的对角上的所有元素
+newlev = lev[lev>2*p/n]
+# 找出所有high leverage points
+bikeshares.reg[lev > 2*p/n,]
+# 筛选出bikeshares中high leverage points的项
+\end{lstlisting}
+
+\subsubsection{Half-norm Plot}
+Designed to identify unusually large values and assess positive data.\\
+Plot the data against the positive normal quantiles. Speciﬁcally,\\
+1. Sort the data:
+$$x_{[1]} \leq ... \leq x_{[n]}.$$
+2. Compute the quantiles:
+$$u_i=\Phi^{-1}(\frac{n+i}{2n+1})$$
+3. Plot $x_{[i]}$ against $u_i$.
+\begin{lstlisting}[language=R]
+library(faraway)
+halfnorm(newlev, 6, labs=as.character(1:length(newlev)),
+ ylab="Leverages")
+# 6是nlab, 即给几个点标注
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.3]{week402.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+\subsubsection{Standardized Residuals, Studentized Residuals, $rstandard()$, $rstudent()$}
+\begin{lstlisting}[language=R]
+rstandard(model)
+rstudent(model)
+\end{lstlisting}
+
+
+\subsubsection{Outliers}
+\begin{lstlisting}[language=R]
+# Compute Studentized Residuals
+jack=rstudent(bikeshare.mlr);
+# The critical value WITH Bonferroni correction is
+qt(.05/(2*n), n-p-1) 
+## [1] -4.681361
+# The critical value WITHOUT Bonferroni correction is
+qt(.05/2, n-p-1)
+## [1] -1.9601
+# Sort the residuals indescending order to find outliers (if any)
+sort(abs(jack), decreasing=TRUE)[1:10]
+##     4462     5130     5139     4471    15888     5140
+## 6.408782 5.665958 5.499140 5.317999 4.807279 4.787554
+##    15217    15385    16727    14905
+## 4.746059 4.738005 4.661289 4.522918
+\end{lstlisting}
+As we can see here, we have 8 outliers, i.e. the values that are higher (in absolute value) of the critical T distribution value with Bonferroni correction ($|-4.681361|$). These are observations: \#4462, \#5130, \#5139, \#4471, \#15888, \#5140, \#15217, \#15385.
+
+\subsection{High influential points}
+\begin{lstlisting}[language=R]
+# Compute Cook's Distance
+cook = cooks.distance(bikeshare.mlr)
+# Extract max Cook's Distance
+max(cook)
+## [1] 0.005641587
+which.max(cook)
+## 4471
+# Prepare a Half Normal Plot of Cook's distances
+halfnorm(cook, 6, labs=as.character(1:length(cook)),
+ ylab="Cook's distances")
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.3]{week403.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+\subsection{Diagnostics}
+\subsubsection{Checking Homoskedasticity Graph
+}
+\begin{lstlisting}[language=R]
+plot(bikeshare.mlr, which=1)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d1}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+Which is same as
+\begin{lstlisting}[language=R]
+plot(bikeshare.mlr$fitted.values, bikeshare.mlr$residuals)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d2.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+\subsubsection{Breusch-Pagan Test}
+\begin{lstlisting}[language=R]
+library(lmtest)
+bptest(bikeshare.mlr)
+## 
+##  studentized Breusch-Pagan test
+## 
+## data:  bikeshare.mlr
+## BP = 133.29, df = 3, p-value < 2.2e-16
+\end{lstlisting}
+We can also perform the BP test by hand:
+\begin{lstlisting}[language=R]
+tmp.fit = lm(bikeshare.mlr$res^2 ~ t1 +  hum + wind_speed,
+ data=bikeshares.reg )
+summary(tmp.fit)$r.sq*dim(bikeshares.reg)[1]
+\end{lstlisting}
+
+\subsubsection{Checking Normality Graph}
+\textbf{QQ-Plot}\\
+\begin{lstlisting}[language=R]
+plot(bikeshare.mlr, which=2)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d3.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+\textbf{Histogram}
+\begin{lstlisting}[language=R]
+hist(bikeshare.mlr$residuals)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d4.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+\subsubsection{Shapiro test}
+\begin{lstlisting}[language=R]
+shapiro.test(residuals(bikeshare.mlr))
+\end{lstlisting}
+\subsubsection{Kolmogorov-Smirnov test}
+\begin{lstlisting}[language=R]
+ks.test(residuals(bikeshare.mlr), y=pnorm)
+## 
+##  One-sample Kolmogorov-Smirnov test
+## 
+## data:  residuals(bikeshare.mlr)
+## D = 0.63627, p-value < 2.2e-16
+## alternative hypothesis: two-sided
+\end{lstlisting}
+The p-value is low, which implies that the normality assumption is not satisfied either.
+
+\subsubsection{Checking Serial Dependence: Durbin Watson test}
+\begin{lstlisting}[language=R]
+library(lmtest)
+dwtest(lm.sales)
+##
+##  Durbin-Watson test
+##
+## data:  lm.sales
+## DW = 0.73473, p-value = 0.0001748
+## alternative hypothesis: true autocorrelation is greater than 0
+\end{lstlisting}
+
+
+
+
+\subsubsection{Checking the Linearity Assumption with Partial Regression Plots}
+Test $t1$
+\begin{lstlisting}[language=R]
+bikeshare.mlr = lm(cnt ~ hum + wind_speed, data=bikeshares.reg)
+bikeshare.mlr.t1 = lm(t1 ~ hum + wind_speed, data=bikeshares.reg)
+plot(bikeshare.mlr.t1$residuals, bikeshare.mlr$residuals)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d5}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+\subsubsection{Box Cox Transformations}
+First we need to make sure each $y_i>0$:
+\begin{lstlisting}[language=R]
+min(bikeshares.reg$cnt) # this is the min value in the y's
+## [1] 0
+which(bikeshares.reg$cnt==0)
+# this is the location of the min value
+## [1] 2016
+bikeshares.reg$cnt[2016]=0.01
+# we replace the min with a small positive value
+min(bikeshares.reg$cnt)
+# we checke whether the 0 value was replaced 
+# by the small positive number
+## [1] 0.01
+\end{lstlisting}
+Now, we are ready to apply the \textit{boxcox} function:
+\begin{lstlisting}[language=R]
+bikes.transformation = boxcox(bikeshare.mlr,
+lambda=seq(-2, 2, length=400))
+\end{lstlisting}
+which also same as
+\begin{lstlisting}[language=R]
+boxcox(bikeshare.mlr,plotit=T) # plotit=T is the default setting
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d6}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+改变范围
+\begin{lstlisting}[language=R]
+boxcox(bikeshare.mlr,plotit=T,lambda=seq(0.1,1,by=0.05)) # zoom-in
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.2]{d7}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+Find the $\lambda$ that maximizes the $Log-likelihood$.
+\begin{lstlisting}[language=R]
+names(bikes.transformation)
+## [1] "x" "y"
+bikes.transformation$x[1:10]
+##  [1] -2.000000 -1.989975 -1.979950 -1.969925 -1.959900 -1.949875 -1.939850
+##  [8] -1.929825 -1.919799 -1.909774
+bikes.transformation$y[1:10]
+##  [1] -372422.1 -370582.3 -368742.9 -366904.0 -365065.6 -363227.6 -361390.0
+##  [8] -359553.0 -357716.4 -355880.2
+bikes.transformation$x[bikes.transformation$y == 
+max(bikes.transformation$y)] # lambda.hat
+## [1] 0.2656642
+\end{lstlisting}
+$$\hat{\lambda}=0.2656642$$
+Construct a Conﬁdence Interval for $\lambda$ as follows:
+$$\{\lambda: L(\lambda)>L(\hat{\lambda})-\frac{1}{2}\chi_1^2(1-\alpha)  \}$$
+\begin{lstlisting}[language=R]
+tmp=bikes.transformation$x[bikes.transformation$y > 
+      max(bikes.transformation$y) - qchisq(0.95, 1)/2];
+range(tmp) # 95% CI. Read Chapter 9 in the Faraway textbook for details.
+## [1] 0.2556391 0.2756892
+\end{lstlisting}
+
+
+
+\subsubsection{Summary of Diagnostic Plots}
+\begin{lstlisting}[language=R]
+fit=lm(Y~., data=rat)
+par(mfrow=c(2,2))
+plot(fit)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.3]{rat2.png}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+
+\subsection{Collinearity}
+\begin{lstlisting}[language=R]
+library(faraway)
+# 提取数据seatpos
+data(seatpos)
+attach(seatpos)
+
+# Fit the FULL model
+position.full=lm(hipcenter ~ ., seatpos)
+x = model.matrix(position.full)[,-1]
+# remove the column that corresponds to the intercept
+\end{lstlisting}
+
+\subsubsection{Standardized each colum of $X$}
+\begin{lstlisting}[language=R]
+x = model.matrix(position.full)[,-1] #去除第一列(即intercept)
+x = x - matrix(apply(x,2, mean), 38,8, byrow=TRUE)
+x = x / matrix(apply(x, 2, sd), 38,8, byrow=TRUE)
+apply(x,2,mean)
+##           Age        Weight       HtShoes            Ht        Seated 
+## -2.193512e-17  2.810252e-16  9.566280e-16  1.941574e-16 -1.073010e-15 
+##           Arm         Thigh           Leg 
+## -1.070022e-16  8.909895e-17 -9.114182e-17
+apply(x,2,var)
+##     Age  Weight HtShoes      Ht  Seated     Arm   Thigh     Leg 
+##       1       1       1       1       1       1       1       1
+\end{lstlisting}
+
+
+
+\subsubsection{Condition number of the $\mathbf{X}^T \mathbf{X}$ matrix}
+\begin{lstlisting}[language=R]
+e = eigen(t(x) %*% x) # compute the eigenvalues
+sqrt(e$val[1]/e$val[8])
+## [1] 59.7662
+\end{lstlisting}
+The condition number is 59.77, larger than 30, so we conclude that collinearity is present.
+
+\subsubsection{Variance Inflation Factor (VIF)}
+\begin{lstlisting}[language=R]
+# Variance Inflation Factor (VIF)
+round(vif(x), dig=2)
+##     Age  Weight HtShoes      Ht  Seated     Arm   Thigh     Leg 
+##    2.00    3.65  307.43  333.14    8.95    4.50    2.76    6.69
+\end{lstlisting}
+\begin{lstlisting}[language=R]
+sqrt(307.43)
+## [1] 17.53368
+\end{lstlisting}
+Note that the se for the coef associated with $HtShoes$ is $17.5$ times larger than it would have been without collinearity.
+
+\subsubsection{Pairwise correlations and partial F-tests}
+\begin{lstlisting}[language=R]
+cor(Seated+Thigh, Ht)
+## [1] 0.9389819
+cor(Seated+Leg, Ht)
+## [1] 0.965607
+cor(Seated+Arm, Ht)
+## [1] 0.9465523
+\end{lstlisting}
+\begin{lstlisting}[language=R]
+position.red1 = lm(hipcenter ~ Age + Weight + Ht + Seated, data=seatpos)
+position.red2 = lm(hipcenter ~ Ht, data=seatpos)
+anova(position.red2, position.red1)
+## Analysis of Variance Table
+##
+## Model 1: hipcenter ~ Ht
+## Model 2: hipcenter ~ Age + Weight + Ht + Seated
+##   Res.Df   RSS Df Sum of Sq      F Pr(>F)
+## 1     36 47616
+## 2     33 44774  3    2841.6 0.6981 0.5599
+\end{lstlisting}
+Based on the $F-$test provided in the $ANOVA$ table, we conclude that the reduced model with $Ht$ as the only variable is better than the model that includes $Age, Weight, Ht$ and $Seated$.
+
+
+
+\section{Time Series}
+\subsection{First Order Autoregressive Model}
+\begin{lstlisting}[language=R]
+library(nlme)
+lm.sales.cor = gls(company_sales~industry_sales,
+correlation = corAR1(form= ~ index), data=sales)
+
+summary(lm.sales.cor)
+## Generalized least squares fit by REML
+##   Model: company_sales ~ industry_sales 
+##   Data: sales 
+##         AIC       BIC   logLik
+##   -31.74311 -28.18162 19.87156
+## 
+## Correlation Structure: AR(1)
+##  Formula: ~index 
+##  Parameter estimate(s):
+## Phi 
+##   1 
+## 
+## Coefficients:
+##                     Value Std.Error  t-value p-value
+## (Intercept)    -0.3189197 2041.6945 -0.00016  0.9999
+## industry_sales  0.1684878    0.0051 33.06272  0.0000
+## 
+##  Correlation: 
+##                (Intr)
+## industry_sales 0     
+## 
+## Standardized residuals:
+##           Min            Q1           Med            Q3           ##           Max
+## -9.036061e-05 -4.156415e-05 -3.013053e-06  8.080346e-05  
+##  1.091922e-04
+## 
+## Residual standard error: 2041.694 
+## Degrees of freedom: 20 total; 18 residual
+\end{lstlisting}
+
+
+
+
+
+\section{Polynomials Regression}
+\subsection{Orthogonal Polynomials}
+\begin{lstlisting}[language=R]
+  poly(.)
+\end{lstlisting}
+\subsection{B-Splines Basis}
+\begin{lstlisting}[language=R]
+  bs(x, df, knots, degree=3, intercept=FALSE)
+  # x是数据
+  # df是输出的design matrix的columns数，和真正的df无关
+  # intercept=FALSE, df=真df-1
+  # intercept=TRUE, df=真df
+  # knots=k，代表k是那个唯一的knot，所以knot数是1，无论k多大
+  new.knots= c(1/6, 3/6, 5/6)
+  bs(x, knots=new.knots, intercept=TRUE)
+  bs(x, knots=quantile(x, c(1/3,2/3)), intercept=TRUE)
+\end{lstlisting}
+
+\subsection{Natural Cubic Splines}
+\begin{lstlisting}[language=R]
+  ns(x, df, knots, Boundary.knots, degree=3, intercept=FALSE)
+  # knots只表示interior knots，还有俩boundary knots。
+  # 所以 真df=#knots+2
+  # 其他一样
+  ns(x, knots=new.knots, Boundary.knots=c(0,1), intercept=TRUE)
+\end{lstlisting}
+
+
+
+\section{Categorical ANOVA}
+\subsection{Effect tests}
+When the levels of the categorical variable are in text (instead of number), R assigns 0 and 1 in alphabetical order: 0 first and 1 second.
+
+\begin{lstlisting}[language=R]
+  quest.full=lm(rate~lot.size*color,quest.data)
+  anova(quest.full)
+  ##Analysis of Variance Table
+  ##Response: rate
+  ##               Df Sum Sq Mean Sq F value  Pr(>F)  
+  ##lot.size        1 43.226  43.226  7.1024 0.01765 *
+  ##color           1 20.052  20.052  3.2947 0.08955 .
+  ##lot.size:color  1  0.166   0.166  0.0272 0.87111  
+  ##Residuals      15 91.293   6.086                  
+  ##---
+  ##Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+\end{lstlisting}
+第一行 intercept only vs. intercept+lot.size\\
+第二行 intercept+lot.size vs. intercept+lot.size+color\\
+第三行 intercept+lot.size+color vs. intercept+lot.size+color+lot.size*color
+
+\subsection{ANOVA Type III}
+This type tests for the presence of an effect given that both the other effects are in the model.
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.3]{type3}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+
+
+
+
+
+\section{Variation Selection}
+\subsection{Leap and Bounds method}
+Use function $regsubsets$ from library leaps to evaluate different scores for sub-sets of models up to size p (including the intercept).
+\begin{lstlisting}[language=R]
+  library(leaps)
+  Hitters.leaps=regsubsets(Salary~.,data=data.reg,nvmax=16)
+  rs=summary(Hitters.leaps)
+  rs$adjr2
+  rs$which[which.max(rs$adjr2),]
+  rs$cp
+  rs$bic
+  n=dim(data.reg)[1]
+  m=2:17
+  Aic=n*log(rs$rss/n)+2*m
+\end{lstlisting}
+\subsection{Searching algorithm based on AIC and BIC}
+Use function step from the $stats$ library to apply searching algorithms based on the AIC (default) or BIC criteria (k = log(n)). The option direction=both uses the Stepwise searching algorithm. You can also use the options: $direction=forward$ and $direction=backward$.
+\begin{lstlisting}[language=R]
+  step(full.model, direction="both")
+  step(full.model, direction="both", k=log(n))
+  We can also use direction=forward and direction=backward
+\end{lstlisting}
+
+
+
+\section{Shrinkage Methods}
+\subsection{PCR, PCA}
+Function prcomp can be used to calculate the PCs and extract the $\lambda$’s squared-roots (sdev) and eigenvectors (rotation) of the variance-covariance matrix:
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.5]{prcomp}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+The pcr function (principal component regression) from the pls package has useful features for prediction and cross-validation. We can easily calculate the RMSE for the training set and the testing set.
+\begin{lstlisting}[language=R]
+  library(pls)
+  modpcr<-pcr(fat ~ ., data=trainmeat,ncomp=50)
+  #summary(modpcr)
+  #RMSE with 4 PCAs
+  rmse(predict(modpcr,ncom=4),trainmeat$fat) 
+  ## [1] 4.064745
+  rmse(predict(modpcr,testmeat,ncomp=4),testmeat$fat)
+  ## [1] 4.533982
+\end{lstlisting}
+You can use the function RMSEP instead, to select the number of PC’s that minimize the 10-fold Cross-Validation error. The resulting Cross-Validation error is < 2.5
+\begin{lstlisting}[language=R]
+  set.seed(123)
+  # Minimize RMSE using function RMSEP
+  pcrmse<-RMSEP(modpcr,newdata=testmeat)
+  plot(pcrmse)  
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.3]{fat}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+
+
+\section{One/Two Way ANOVA}
+\subsection{Pairwise comparisons}
+Construct $90\%$ family confidence intervals for all pairwise comparisons of classroom environments.
+\begin{center}\begin{figure}[htbp]
+  \centering
+  \includegraphics[scale=0.3]{aov}
+  \caption{}
+  \label{}
+\end{figure}\end{center}
+
+
+
+\section{ Experimental Designs}
+\subsection{ Paired t-test}
+\begin{lstlisting}[language=R]
+t.test(shoes$A-shoes$B)
+\end{lstlisting}
+
+\subsection{}
+We use the drop1 function instead of anova, because of the lack of orthogonality due to the incompleteness of the design.
+\begin{lstlisting}[language=R]
+  lmodbibd <- lm(gain~block+treat, rabbit)
+  drop1(lmodbibd, test="F")
+  ## Single term deletions
+  ## 
+  ## Model:
+  ## gain ~ block + treat
+  ##        Df Sum of Sq    RSS     AIC F value    Pr(>F)    
+  ## <none>              150.77  78.437                      
+  ## block   9    595.74 746.51 108.426  6.5854 0.0007602 ***
+  ## treat   5    158.73 309.50  90.013  3.1583 0.0381655 *  
+  ## ---
+  ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{画图}
+
+\subsection{$2\times2$的画布}
+\begin{lstlisting}[language=R]
+par(mfrow=c(2,2))
+\end{lstlisting}
+\subsection{plot点图，接上节 (bikeshares)}
+\begin{lstlisting}[language=R]
+par(mfrow=c(2,2))
+# Plot of t1 vs. cnt
+plot(bikeshares.reg$t1, bikeshares.reg$cnt, xlab="Real
+Temperature in C", ylab="New Bike Shares")
+# Plot of t2 vs. cnt
+plot(bikeshares.reg$t2, bikeshares.reg$cnt, xlab=" Feels
+Like Temperature in C", ylab="New Bike Shares")
+# Plot of t1 vs. t2
+plot(bikeshares.reg$t1, bikeshares.reg$t2, xlab=" Feels
+Like Temperature in C", ylab="Real Temperature in C")
+# Plot of hum vs. t1
+plot(bikeshares.reg$hum, bikeshares.reg$t1, xlab="Humidity",
+ylab="Real Temperature in C")
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.3]{Bike.png}
+    \caption{}
+    \label{}
+\end{figure}\end{center}
+
+\subsection{ggplot}
+\begin{lstlisting}[language=R]
+library(ggplot2)
+\end{lstlisting}
+\subsubsection{Plot the regression line along with the connected “point-wise” confidence intervals (galton)}
+\begin{lstlisting}[language=R]
+library(ggplot2)
+ggplot(galton, aes(MP,AH)) + geom_point() + geom_smooth(method=lm)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.5]{plot1.png}
+    \caption{}
+    \label{}
+\end{figure}\end{center}
+\subsubsection{给颜色取名，竖直的线，坐标label}
+\begin{lstlisting}[language=R]
+# Form the data frame for plotting
+ggplot(data=NULL, aes(x=0:56)) + 
+  geom_line(aes(y=myCI[,1], colour="LSfit"), size=1) + 
+  geom_line(aes(y=myCI[,2], colour="90% CI"), size=1) +
+  geom_line(aes(y=myCI[,3], colour="90% CI"), size=1) +
+  geom_line(aes(y=myPI[,2], colour="90% PI"), size=1, linetype=2)+
+  geom_line(aes(y=myPI[,3], colour="90% PI"), size=1, linetype=2)+ 
+  scale_colour_manual("", values=c("LSfit" = "black",
+                               "90% CI" = "blue", 
+                               "90% PI"="red"))+ 
+  xlab("wind_speed") +ylab("bike shares")+ 
+  geom_vline(xintercept = mean(bikeshares.reg$wind_speed),
+  colour="purple", size=1, linetype=3)
+\end{lstlisting}
+\begin{center}\begin{figure}[htbp]
+    \centering
+    \includegraphics[scale=0.5]{week501.png}
+    \caption{}
+    \label{}
+\end{figure}\end{center}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

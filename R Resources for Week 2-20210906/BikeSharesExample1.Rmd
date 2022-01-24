@@ -1,0 +1,175 @@
+---
+title: "London Bike Shares"
+author: "Alexandra Chronopoulou"
+date: "Lecture 4 Example"
+output: html_document
+---
+
+<br> 
+<h3> <font color=blue > Introduction to Multiple Linear Regression </font></h3>
+<br>
+
+
+<hr>
+In this example, we are going to fit a multiple linear regression model using the <i>London Bike Sharing</i> data set. The data is acquired from 3 sources between 1/1/2015 to 31/12/2016:
+<ul>
+<li> https://cycling.data.tfl.gov.uk/ : contains <i>OS data © Crown copyright and database rights [2016]</i> and <i>Geomni UK Map data © and database rights [2019]</i> Powered by TfL Open Data</li>
+<li> https://i-weather.com: contains weather data</li>
+<li>https://www.gov.uk/bank-holidays: contains data regarding holidays in the UK </li>
+</ul>
+The data from cycling dataset is grouped by "Start time", this represent the count of new bike shares grouped by hour. The long duration shares are not taken in the count.
+The data can be downloaded from the course website (filename: `bikeshares.csv`).
+
+
+<hr>
+
+Let's start by importing the data into R:
+```{r}
+bikeshares <-  read.csv("BikeShares.csv", header=TRUE)
+dim(bikeshares)
+```
+
+The `bikeshares` data frame has 17414 rows and 10 columns; specifically, it  contains the following variables:
+<ul>
+<li> `timestamp` - timestamp field for grouping the data </li> 
+<li> `cnt` - the count of a new bike shares  </li> 
+<li> `t1` - real temperature in C  </li> 
+<li> `t2` - temperature in C "feels like" </li>  
+<li> `hum` - humidity in percentage  </li> 
+<li> `wind_speed` - wind speed in km/h  </li> 
+<li> `weather_code` - category of the weather  </li> 
+<li> `is_holiday` - boolean field - 1 holiday / 0 non holiday  </li> 
+<li> `is_weekend` - boolean field - 1 if the day is weekend  </li> 
+<li> `season` - category field meteorological seasons: 0-spring ; 1-summer; 2-fall; 3-winter. </li> 
+</ul>
+The `weather_code` category description: 
+1 = Clear, mostly clear but have some values with haze/fog/patches of fog/ fog in vicinity; 2 = scattered clouds / few clouds;  3 = Broken clouds; 4 = Cloudy; 7 = Rain/ light Rain shower/ Light rain;  10 = rain with thunderstorm;  26 = snowfall; 94 = Freezing Fog.
+
+
+
+<br><hr><br>
+
+
+### 1. Descriptive Statistics
+
+In order to get a better idea of the data we print parts of the data set:
+```{r }
+head(bikeshares)
+```
+
+Because in this example we want to focus on regression of a continuous response against continuous predictors, we are going to "ignore" all the categorical variables from our study. We will also remove the timestamp, since for our purposes it is not needed. For convenience, we create a new dataframe containing only the information we want:
+
+```{r}
+# We remove columns 1,  7, 8, 9, 10:
+bikeshares.reg = bikeshares[,c(-1,-7,-8,-9,-10)]
+head(bikeshares.reg)
+```
+
+<i><u> Remark</u></i> The categorical variables can (and should) be included in a regression model. This is something that we will discuss later in the course when we introduce ANCOVA models.
+
+<br>
+
+Let us  obtain the summary statistics for the tailored data set:
+```{r}
+summary(bikeshares.reg)
+```
+ 
+We also prepare various pairwise scatter plots:
+
+```{r}
+par(mfrow=c(2,2))
+# Plot of t1 vs. cnt
+plot(bikeshares.reg$t1, bikeshares.reg$cnt, xlab="Real Temperature in C", ylab="New Bike Shares") 
+# Plot of t2 vs. cnt
+plot(bikeshares.reg$t2, bikeshares.reg$cnt, xlab=" Feels Like Temperature in C", ylab="New Bike Shares") 
+# Plot of t1 vs. t2
+plot(bikeshares.reg$t1, bikeshares.reg$t2, xlab=" Feels Like Temperature in C", ylab="Real Temperature in C")
+# Plot of hum vs. t1
+plot(bikeshares.reg$hum, bikeshares.reg$t1, xlab="Humidity", ylab="Real Temperature in C") 
+
+```
+
+Look at  the plot between <i>Real</i> temperature and <i>Feels Like</i> temperature. What do you observe?
+
+<br>
+
+<hr>
+<br>
+
+
+### 2. Simple Linear Regression
+
+We are interested in ivestigating the relationship between the `Real Temperature` and `Bike Shares`. So, we fit a simple linear regression to the data:
+
+```{r}
+bikeshare.slr = lm(cnt ~ t2 , data=bikeshares.reg )
+summary(bikeshare.slr)
+```
+
+If we look at the estimated value of the predictor `t2` we observe that the value is positive and equal to 60.534, indicating a positive relation between `t2` and `cnt`. We can also perform the following hypothesis test to assess the statistical significance of the `t2` temperature:
+\[\begin{cases}
+&H_0: \beta_1=0\\
+&H_{\alpha}: \beta_1 \neq 0
+\end{cases}\]
+For this test the test statistic is the $t$-value from the ANOVA Table (equal to 29.04) and we can quickly perform the test by looking the $p$-value (here $<2e-16$). If we compare it with  $\alpha=5\%$, we conclude that the Real Temperature is statistically significant. We can also say that the difference in the number of bike shares when there is  an 1 degree Celsius difference in the temperature is equal to 60.534.
+
+<br><hr><br>
+
+
+### 3. Multiple Linear Regression
+
+Now, let’s try to explain the "bike shares " (i.e. `cnt`) by introducing 3 more variables (i.e. `t1`, `t2`, `hum`, `wind_speed`) in the model by fitting a MLR.
+
+```{r}
+bikeshare.mlr1 = lm(cnt ~ t1 + t2 + hum + wind_speed, data=bikeshares.reg )
+summary(bikeshare.mlr1)
+```
+
+While `t2` is a significant predictor for `cnt` in SLR with a positive coefficient, the coefficient estimate for `t2` in MLR is  negative, which  contradicts  what we had before.
+
+So, how should we interpret the coefficient estimate for `t1` in SLR and the one in MLR?
+
+Does it make sense for the SLR to suggest that `t2` has a positive effect on `cnt`, while MLR suggests the opposite? Such seemingly contradictory statements are quite common when predictors are **correlated**.
+
+So, let's look at the correlation matrix of the data:
+```{r}
+cor(bikeshares.reg[,-1])
+```
+
+If we carefully observe the entries of the correlation matrix, we will observe that several of the correlation coefficients are high. In particular,
+\[Corr(t1,t2) \approx 0.988,\,\, Corr(t1, hum) \approx -0.448\]
+The issue of predictors that are correlated with other predictors in regression is called **multicollinearity**. Multicollinearity occurs when your model includes multiple factors that are correlated not just to your response variable, but also to each other. In other words, it results when we include factors that are a bit <u>redundant</u>. This correlation leads to increased standard errors, coefficients with signs opposite from what we would expect and insignificant results when they should be significant. 
+
+From a mathematical point of view, multicollinearity implies that one of the predictors can be expressed as a linear combination of the other two which leads to **rank deficiency in the design matrix**.
+
+<br>
+<hr>
+<br>
+
+### 3. How to handle rank defficiency?
+
+Sometimes, we may have redundant predictors, i.e., one predictor is equal to a linear combination of some other predictors. Then, the design matrix `X` is not of full rank. The consequence is that the inverse of `(X’X)` does not exist, so we cannot compute the LS estimate $\hat{\beta}$.
+
+For example, to make things <i>worse</i> (in order to illustrate the issue), suppose we create a new variable which measures the average of the two temperatures, i.e., \[temp.mean = (t1+t2)/2.\] Then, we re-run the regression with all the predictors:
+
+```{r}
+newbikeshares.reg = bikeshares.reg
+newbikeshares.reg[, "temp.mean"] = (bikeshares.reg$t1+bikeshares$t2)/2
+bikeshare.mlr2 = lm(cnt ~ t1 + t2 + hum + wind_speed + temp.mean, data=newbikeshares.reg )
+summary(bikeshare.mlr2)
+```
+
+Of course, when `X` has rank deficiency; we cannot discuss parameter estimation, since the LS estimates are no longer unique — there are many equally good estimates of beta which give us the same RSS.
+
+But, if we just care about prediction, then rank deficiency doesn’t bring us any trouble. You’ll find the fitted values from the two models, with/without `temp.mean`, are the same.
+
+```{r}
+cbind(bikeshare.mlr1$fitted[1:5], bikeshare.mlr2$fitted[1:5])
+```
+
+
+<u>Remark:</u> The issue of multicollinearity and how to address it will be  studied extensively in a couple of weeks.
+
+
+<hr><hr>
+

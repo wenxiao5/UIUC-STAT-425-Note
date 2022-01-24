@@ -1,0 +1,377 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Homework 3},
+  pdfauthor={Wenxiao Yang},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Homework 3}
+\author{Wenxiao Yang}
+\date{9/20/2021}
+
+\begin{document}
+\maketitle
+
+\hypertarget{part-ii-homework-questions-to-be-submitted}{%
+\subsubsection{Part II: Homework Questions -- to be
+submitted}\label{part-ii-homework-questions-to-be-submitted}}
+
+Derive a formula relating \(R^2\) and the \(F\) -test for the
+regression. You can find the formula in the lecture slides. Here you
+need to derive it
+
+\[F=\frac{(RSS_{0}-RSS_{\alpha})/q}{RSS_{\alpha}/(n-p)}=\frac{(\frac{RSS_{0}}{TSS}-\frac{RSS_{\alpha}}{TSS})/q}{\frac{RSS_{\alpha}}{TSS}/(n-p)}\\=\frac{((1-R_R^2)-(1-R_F^2))/(df_F-df_R)}{(1-R_F^2)/df_F}=\frac{(R_F^2-R_R^2)/(df_R-df_F)}{(1-R_F^2)/df_F}\]
+
+The \texttt{whitewines.csv} data set contains information related to
+white variants of the Portuguese ``Vinho Verde'' wine. Specifically, we
+have recorded the following information: (a) \texttt{fixed\ acidity},
+(b) \texttt{volatile\ acidity}, (c) \texttt{citric\ acid} , (d)
+\texttt{residual\ sugar}, (e) \texttt{chlorides} , (f)
+\texttt{free\ sulfur\ dioxide}, (g) \texttt{total\ sulfur\ dioxide}, (h)
+\texttt{density}, (i) \texttt{pH}, (j) \texttt{sulphates}, (k)
+\texttt{alcohol}, (l) \texttt{quality} (score between 0 and 10)
+
+In this homework, our goal is to explain the relationship between
+\texttt{alcohol\ level} (dependent variable) and
+\texttt{residual\ sugar}, \texttt{pH}, \texttt{density} and
+\texttt{fixed\ acidity}.
+
+Fit a regression model to the data for the four predictor variables
+mentioned above. State the estimated regression function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{whitewines.data}\OtherTok{\textless{}{-}}\FunctionTok{read.csv}\NormalTok{(}\StringTok{"whitewines.csv"}\NormalTok{,}\AttributeTok{sep=}\StringTok{";"}\NormalTok{,}\AttributeTok{header =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{whitewines.reg}\OtherTok{=}\NormalTok{whitewines.data[,}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{2}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{3}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{5}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{6}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{7}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{10}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{12}\NormalTok{)]}
+\NormalTok{whitewines.mlr}\OtherTok{=}\FunctionTok{lm}\NormalTok{(alcohol}\SpecialCharTok{\textasciitilde{}}\NormalTok{residual.sugar}\SpecialCharTok{+}\NormalTok{pH}\SpecialCharTok{+}\NormalTok{density}\SpecialCharTok{+}\NormalTok{fixed.acidity,}\AttributeTok{data=}\NormalTok{whitewines.reg)}
+\FunctionTok{summary}\NormalTok{(whitewines.mlr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = alcohol ~ residual.sugar + pH + density + fixed.acidity, 
+##     data = whitewines.reg)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3867 -0.2735 -0.0334  0.2200 16.9366 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)     6.790e+02  4.540e+00  149.56   <2e-16 ***
+## residual.sugar  2.367e-01  2.702e-03   87.58   <2e-16 ***
+## pH              2.535e+00  5.281e-02   48.01   <2e-16 ***
+## density        -6.858e+02  4.664e+00 -147.05   <2e-16 ***
+## fixed.acidity   5.352e-01  9.858e-03   54.30   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.4702 on 4893 degrees of freedom
+## Multiple R-squared:  0.8542, Adjusted R-squared:  0.854 
+## F-statistic:  7164 on 4 and 4893 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(whitewines.mlr)}\SpecialCharTok{$}\NormalTok{coefficient}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                    Estimate  Std. Error    t value Pr(>|t|)
+## (Intercept)     678.9634114 4.539785126  149.55849        0
+## residual.sugar    0.2366782 0.002702379   87.58141        0
+## pH                2.5354458 0.052808512   48.01207        0
+## density        -685.8105090 4.663736406 -147.05173        0
+## fixed.acidity     0.5352304 0.009857851   54.29484        0
+\end{verbatim}
+
+\[\widehat{\text{alcohol level}}=678.9634114+0.2366782\text{ residual sugar}+2.5354458\text{ pH}-685.8105090\text{ density}+0.5352304\text{ fixed acidity}\]
+
+Prepare partial scatter plots for all 5 variables under consideration.
+What do you observe?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{ (}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{ (}\DecValTok{2}\NormalTok{ ,}\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(whitewines.reg}\SpecialCharTok{$}\NormalTok{residual.sugar, whitewines.reg}\SpecialCharTok{$}\NormalTok{alcohol, }\AttributeTok{xlab =}\StringTok{"residual sugar"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"alcohol level"}\NormalTok{ )}
+\FunctionTok{plot}\NormalTok{(whitewines.reg}\SpecialCharTok{$}\NormalTok{pH, whitewines.reg}\SpecialCharTok{$}\NormalTok{alcohol, }\AttributeTok{xlab =}\StringTok{"pH"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"alcohol level"}\NormalTok{ )}
+\FunctionTok{plot}\NormalTok{(whitewines.reg}\SpecialCharTok{$}\NormalTok{density, whitewines.reg}\SpecialCharTok{$}\NormalTok{alcohol, }\AttributeTok{xlab =}\StringTok{"density"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"alcohol level"}\NormalTok{ )}
+\FunctionTok{plot}\NormalTok{(whitewines.reg}\SpecialCharTok{$}\NormalTok{fixed.acidity, whitewines.reg}\SpecialCharTok{$}\NormalTok{alcohol, }\AttributeTok{xlab =}\StringTok{"fixed acidity"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"alcohol level"}\NormalTok{ )}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{hw3_files/figure-latex/unnamed-chunk-3-1.pdf} It is
+obvious that residual sugar, density and fixed acidity are all negative
+correlated to alcohol level. However, the relation between pH and
+alcohol level can't be easily detected.
+
+Compute the correlation matrix for all the 5 variables. What are your
+observations?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cor}\NormalTok{(whitewines.reg)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                fixed.acidity residual.sugar     density          pH    alcohol
+## fixed.acidity      1.0000000      0.0890207  0.26533101 -0.42585829 -0.1208811
+## residual.sugar     0.0890207      1.0000000  0.83896645 -0.19413345 -0.4506312
+## density            0.2653310      0.8389665  1.00000000 -0.09359149 -0.7801376
+## pH                -0.4258583     -0.1941335 -0.09359149  1.00000000  0.1214321
+## alcohol           -0.1208811     -0.4506312 -0.78013762  0.12143210  1.0000000
+\end{verbatim}
+
+The covariance of density and alcohol level is low(close to -1), which
+means they are strongly negative related to each other. The covariance
+of density and residual sugar is high(close to 1), which means they are
+strongly positive related to each other.
+
+Calculate the coefficient of multiple determination \(R^2\). Interpret
+your results.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(whitewines.mlr)}\SpecialCharTok{$}\NormalTok{r.square}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.8541622
+\end{verbatim}
+
+\[R^2=0.8541622\] Which means \(85.41622\%\) of total variance can be
+explained by the 4 variables.
+
+Test whether there is a linear regression relation, using
+\(\alpha=0.05\). State the alternatives, decision rule, and conclusion.
+What does your test imply about \(\beta_1\), \(\beta_2\), \(\beta_3\)
+and \(\beta_4\)? \[
+\left\{\begin{array}{l}
+H_{0}: \beta_{1}=\beta_2=\beta_3=\beta_4=0\ &(\text{null})\\
+H_{\alpha}:\text{For some }j=1,2,3,4:\ \beta_{j} \neq 0\ &(\text{alternative})
+\end{array}\right.
+\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(whitewines.mlr)}\SpecialCharTok{$}\NormalTok{fstat}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    value    numdf    dendf 
+## 7164.496    4.000 4893.000
+\end{verbatim}
+
+the f-statistics is 7164.496 with \({df}_1=4\), \({df}_2=4893\), then we
+need to compute the \(p-\)value. If the \(p-\)value\(<0.05\), reject
+null hypothesis.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DecValTok{1}\SpecialCharTok{{-}}\FunctionTok{pf}\NormalTok{(}\FunctionTok{summary}\NormalTok{(whitewines.mlr)}\SpecialCharTok{$}\NormalTok{fstat[}\DecValTok{1}\NormalTok{],}\DecValTok{4}\NormalTok{,}\DecValTok{4893}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## value 
+##     0
+\end{verbatim}
+
+The \(p-\)value is \(0<0.05\), so we reject the null hypothesis. Which
+means there is a linear regression relation. This also imply there is at
+least one \(\beta_j\neq0,\ j=1,2,3,4\).
+
+Test whether \(X_3\) can be dropped from the regression model given that
+\(X_1\), \(X_2\) are retained. Use level of significance 0.025. State
+the alternatives, decision rule and conclusion. \[
+\left\{\begin{array}{l}
+H_{0}: \beta_3=0\ &(\text{null})\\
+H_{\alpha}:\beta_3\neq0\ &(\text{alternative})
+\end{array}\right.
+\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{whitewines.mlr.full}\OtherTok{=}\FunctionTok{lm}\NormalTok{(alcohol}\SpecialCharTok{\textasciitilde{}}\NormalTok{residual.sugar}\SpecialCharTok{+}\NormalTok{pH}\SpecialCharTok{+}\NormalTok{density,}\AttributeTok{data=}\NormalTok{whitewines.reg)}
+\NormalTok{whitewines.mlr.reduced1}\OtherTok{=}\FunctionTok{lm}\NormalTok{(alcohol}\SpecialCharTok{\textasciitilde{}}\NormalTok{residual.sugar}\SpecialCharTok{+}\NormalTok{pH,}\AttributeTok{data=}\NormalTok{whitewines.reg)}
+\FunctionTok{anova}\NormalTok{ (whitewines.mlr.reduced1, whitewines.mlr.full)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Analysis of Variance Table
+## 
+## Model 1: alcohol ~ residual.sugar + pH
+## Model 2: alcohol ~ residual.sugar + pH + density
+##   Res.Df    RSS Df Sum of Sq     F    Pr(>F)    
+## 1   4895 5901.3                                 
+## 2   4894 1733.2  1    4168.1 11770 < 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+f-statistics is 11770. Then we need to compute \(p-\)value. If the
+\(p-\)value\(<0.025\), we can reject the null hypothesis.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DecValTok{1}\SpecialCharTok{{-}}\FunctionTok{pf}\NormalTok{(}\DecValTok{11770}\NormalTok{,}\DecValTok{1}\NormalTok{,}\DecValTok{4894}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+
+The \(p-\)value is \(0<0.025\), so we reject the null hypothesis. Which
+means \(X_3\) can't be dropped.
+
+Test whether both \(X_2\) and \(X_3\) can be dropped from the regression
+model, given that \(X_1\) is retained. Use level of significance 0.025.
+State the alternatives, decision rule and conclusion. \[
+\left\{\begin{array}{l}
+H_{0}: \beta_1=\beta_2=0\ &(\text{null})\\
+H_{\alpha}:\beta_1\neq0\text{ or }\beta_2\neq0\ &(\text{alternative})
+\end{array}\right.
+\]
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{whitewines.mlr.reduced2}\OtherTok{=}\FunctionTok{lm}\NormalTok{(alcohol}\SpecialCharTok{\textasciitilde{}}\NormalTok{density,}\AttributeTok{data=}\NormalTok{whitewines.reg)}
+\FunctionTok{anova}\NormalTok{ (whitewines.mlr.reduced2, whitewines.mlr.full)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Analysis of Variance Table
+## 
+## Model 1: alcohol ~ density
+## Model 2: alcohol ~ residual.sugar + pH + density
+##   Res.Df    RSS Df Sum of Sq    F    Pr(>F)    
+## 1   4896 2902.6                                
+## 2   4894 1733.2  2    1169.4 1651 < 2.2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+f-statistics is 1651. Then we need to compute \(p-\)value. If the
+\(p-\)value\(<0.025\), we can reject the null hypothesis.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DecValTok{1}\SpecialCharTok{{-}}\FunctionTok{pf}\NormalTok{(}\DecValTok{1651}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{4894}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0
+\end{verbatim}
+
+The \(p-\)value is \(0<0.025\), so we reject the null hypothesis. Which
+means \(X_1\) and \(X_2\) can't be dropped together.
+
+\end{document}

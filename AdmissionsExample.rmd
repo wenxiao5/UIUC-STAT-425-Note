@@ -1,0 +1,74 @@
+---
+title: "University Admissions R Example"
+author: "Alexandra Chronopoulou"
+date: 'Lecture #2'
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<h3> <span style="color: darkblue;">Example </span> </h3>
+The director of admissions of a small college administered a newly designed entrance test to 20 students selected at random from the freshman class in a study to determine whether a student’s grade point average (GPA) at the end of the freshman year (Y) can be predicted from the entrance test score (X). The results of the study follow are summarized in the admissions.txt file.
+
+<h4><span style="color: blue;"><u> Analysis </u></span></h4>
+First, we need to set the working directory. In order to find the directory where the file is stored, from the top of the page, go to:
+<center>
+Session -> Set Working Directory -> Choose Directory
+</center>
+<br>
+
+
+Our analysis starts by reading the data into R. We have a .txt file to read using the read.table command, and since we have no headers we add "header=FALSE". If the file contains headers, then we simply put "header=TRUE". R uses "V1" and "V2" as default values for the two columns in the file. We can rename the columns, using the code below:
+```{r}
+admissions = read.table("admissions.txt", header=FALSE)
+gpa = admissions$V2
+entrance_score = admissions$V1
+```
+<br>
+
+We want to create a scatterplot of the dataset. The R-code and ouput are as follows:
+
+```{r}
+library(ggplot2)
+scatterplot = ggplot(admissions, aes(entrance_score, gpa)) +
+  geom_point(size=4, color='darkblue') + 
+  labs(title="GPA vs. Entrance Score",y="GPA",x="Entrance Score") +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot(scatterplot)
+```
+
+<br>
+
+Based on the scatterplot, we can say that there might be a linear relation between the two variables, X and Y. Therefore, we fit a <i> simple linear regression</i>:
+
+```{r}
+admissions.lm = lm(gpa~entrance_score)
+summary(admissions.lm)
+```
+The fitted regression line is shown added in the scatterplot below:
+```{r}
+scatterplot_reg = ggplot(admissions, aes( entrance_score, gpa)) +
+  geom_point(size=4, color='darkblue') + 
+  labs(title="GPA vs. Entrance Score",y="GPA",x="Entrance Score") +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5))+
+  geom_smooth(method=lm)
+plot(scatterplot_reg)
+```
+
+As we can see, from the R Output, the fitted values for the coefficients are: 
+\[\beta_0 = 3.0539,\,\, \beta_1 = 0.7785\]
+and the line that we fitted is:
+\[\text{(GPA)} = 3.0539 + 0.7785 \cdot \text{(Entrance Score)}\]
+
+In order to obtain the residuals and fitted values from R, we have
+```{r}
+admissions.res = resid(admissions.lm)
+admissions.pred = fitted(admissions.lm)
+```
+

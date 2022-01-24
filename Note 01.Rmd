@@ -1,0 +1,82 @@
+---
+title: "STAT 425 Note 01"
+author: "Wenxiao Yang"
+date: "9/1/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# Introduction to Regression Analysis
+## Regression Analysis
+It is a “tool” used to examine the relationship between
+a *Dependent Variable* or *Response* $Y$, and
+one (or more) *Independent Variables* or *Regressors* or *Predictors* $X_1 ,X_2 ,...,X_p$.
+
+# Simple Linear Regression
+$$y=\beta_0+\beta_1 x$$
+$\beta_0$ is the *intercept*; $\beta_1$ is the *slope*.
+One Response $\mathcal{Y}$; One Predictor $\mathcal{X}$
+The data come in pairs:
+$$\begin{aligned}
+&x_1\quad &y_1\\&x_2\quad &y_2\\&\vdots\quad &\vdots\\&x_n\quad &y_n
+\end{aligned}$$
+$Y$ is a RANDOM VARIABLE that has a distribution for every level of the independent variable.
+
+## Simple Linear Regression Model
+$$y_i=\beta_0+\beta_1 x_i+\varepsilon_i $$
+where the **intercept** $\beta_0$, the **slope** $\beta_1$, and the **error variance** $\sigma^2$ are the *model parameters*.
+
+
+### Assumptions of errors $\varepsilon$: 1. Mean zero, 2. umcorrelated, 3. homoscedastic
+The **errors** $\varepsilon_1 , \varepsilon_2 , . . . , \varepsilon_n$ are assumed to
+
+– have **mean zero**: $E(\varepsilon_i ) = 0$
+
+– be **uncorrelated**: $Cov(\varepsilon_ i , \varepsilon_ j ) = 0, i \neq j$
+
+– be **homoscedastic**: $Var(\varepsilon_i ) = \sigma^ 2$ does not depend on $i$.
+
+### Interpretation of $\beta_1$, $\beta_0$
+$\beta_1$ is the <font color=orange>change in the mean</font> of the probability distribution function of $y$ per unit change in $x$.
+When $x=0$, $\beta_0$ is the <font color=orange>mean</font> of the probability distribution function of $y$, otherwise $\beta_0$ has no particular meaning.
+
+# Least Squares
+We want to find estimates of $\beta_0$, $\beta_1$ to minimize:
+$$\min [y_i-E(y_i)]\Leftrightarrow \min [y_i-(\beta_0+\beta_1 x_i)]$$
+minimize the <font color=orange>Residual Sum of Squares (RSS)</font>
+$$RSS=\sum_{i=1}^n(y_i-\beta_0-\beta_1 x_i)^2$$
+$$(\hat{\beta_0},\hat{\beta_1})=\argmin_{(\beta_0,\beta_1)}RSS$$
+
+$\begin{aligned}
+    \frac{\partial RSS}{\partial \beta_0}=0 &\Leftrightarrow -2\sum_{i=1}^n(y_i-\beta_0-\beta_1 x_i)=0\\
+    & \Leftrightarrow \beta_0 n+\beta_1\sum_{i=1}^n x_i=\sum_{i=1}^n y_i
+\end{aligned}$
+$\begin{aligned}
+    \frac{\partial RSS}{\partial \beta_1}=0 &\Leftrightarrow -2\sum_{i=1}^n(y_i-\beta_0-\beta_1 x_i)x_i=0\\
+    &\Leftrightarrow \beta_0 \sum_{i=1}^nx_i+\beta_1\sum_{i=1}^n x_i^2=\sum_{i=1}^n x_iy_i
+\end{aligned}$
+
+## LS Estimators
+Then we can solve that
+$\begin{aligned}
+&\hat{\beta}_{1}=\frac{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)\left(y_{i}-\bar{y}\right)}{\sum_{i=1}^{n}\left(x_{i}-\bar{x}\right)^{2}}=\frac{\sum_{i=1}^{n} x_{i} y_{i}-n \bar{x} \bar{y}}{\sum_{i=1}^{n} x_{i}^{2}-n \bar{x}^{2}} \\
+&\hat{\beta}_{0}=\bar{y}-\hat{\beta}_{1} \bar{x}
+\end{aligned}$
+
+Alternative Representation of $\hat{\beta_1}$
+$\hat{\beta}_{1}=\frac{\sum_{i}\left(x_{i}-\bar{x}\right)\left(y_{i}-\bar{y}\right)}{\sum_{i}\left(x_{i}-\bar{x}\right)^{2}}:=\frac{S_{x y}}{S_{x x}}=r_{x y} \sqrt{\frac{S_{y y}}{S_{x x}}}$
+Where $S_{xy}=\sum_{i}\left(x_{i}-\bar{x}\right)\left(y_{i}-\bar{y}\right)$, $S_{xx}=\sum_{i}\left(x_{i}-\bar{x}\right)^{2}$, $S_{yy}=\sum_{i}\left(y_{i}-\bar{y}\right)^{2}$, $r_{xy}=\frac{S_{xy}}{\sqrt{S_{xx}S_{yy}}}$

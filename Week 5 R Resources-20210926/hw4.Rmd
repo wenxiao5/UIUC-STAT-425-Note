@@ -1,0 +1,126 @@
+---
+title: "Homework 4"
+author: "Wenxiao Yang"
+output: html_document
+---
+
+
+## Multiple Linear Regression
+
+
+
+
+<ol>
+
+
+### Part II: Homework Questions -- to be submitted
+
+The `whitewines.csv` data set contains information related to  white variants of the Portuguese "Vinho Verde" wine. Specifically, we have recorded the following information:
+
+(a)  fixed acidity, (b)  volatile acidity, (c)  citric acid, (d)  residual sugar, (e)  chlorides , (f)  free sulfur dioxide, (g) total sulfur dioxide, (h)  density, (i) pH, (j) sulphates, (k)  alcohol, (l)  quality (score between 0 and 10)
+
+
+In this homework, our goal is to explain the relationship between alcohol level (dependent variable) and residual sugar, pH, density and fixed acidity.
+
+<ol type="a">
+<li>  Identify any outlying $Y$ observations. Use the Bonferroni outlier test procedure with $\alpha=.05$. State decision rule and conclusion.
+```{r}
+whitewines<-read.csv("whitewines.csv",sep = ";")
+whitewines.reg=whitewines[,c(-2,-3,-5,-6,-7,-10,-12)]
+whitewines.mlr=lm(alcohol~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+summary(whitewines.mlr)
+```
+```{r}
+n=dim(whitewines.reg)[1]
+p=5
+qt(0.05/(2*n),n-p-1)
+```
+```{r}
+rst_whitewines=rstudent(whitewines.mlr)
+sort(rst_whitewines, decreasing = TRUE)[1:10]
+```
+If the absolute value of Studentized Residuals is higer than the absolute value of the critical $T$ distribution value with Bonferroni correction (i.e. $|-4.417336|$).
+We have 4 outliers: #2782, $3902, #1654, #1664.
+
+</li>
+<li>  Obtain the diagonal elements of the hat matrix and identify any high leverage points. If any, are they good or bad?
+```{r}
+library(faraway)
+h_vec=influence(whitewines.mlr)$hat
+halfnorm(h_vec, 10, ylab="Leverages")
+```
+
+```{r}
+high_lev=h_vec[h_vec>2*p/n]
+length(high_lev)
+```
+There are 247 high leverage points. 
+If a point's $y$ value follows the pattern of the rest of the data, then it is a good-high leverage point, otherwise, it is not.
+
+
+</li>
+<li>  Use Cook's distance to investigate whether there are any high influential points. What do you conclude?
+```{r}
+cook=cooks.distance(whitewines.mlr)
+cook[cook>1]
+```
+There is a high influential point #2782. It is much larger than the other samples. 
+
+</li>
+
+<li>  Calculate Cook's distance $D_i$ for each case and prepare an index plot. Are any cases influential according to this measure?
+```{r}
+cook=cooks.distance(whitewines.mlr)
+halfnorm(cook, 4, ylab="Cook's distances")
+```
+#2782 is high influential.
+
+</li>
+<li>   Predict the amount of alcohol of a white wine with  residual.sugar = 1.7 , pH = 3, density = 1, fixed.acidity = 6.3  with an appropriate 95\% confidence interval.
+```{r}
+new=data.frame(residual.sugar = 1.7 , pH = 3, density = 1, fixed.acidity = 6.3)
+predict.lm(whitewines.mlr,new,interval = "confidence", level=0.95)
+```
+
+
+<li>   Predict the amount of alcohol of a white wine with  residual.sugar = 67 , pH = 4, density = 1.1, fixed.acidity = 15 with an appropriate 95\% prediction interval.
+```{r}
+new2=data.frame(residual.sugar = 67 , pH = 4, density = 1.1, fixed.acidity = 15)
+predict.lm(whitewines.mlr,new2,interval = "prediction", level=0.95)
+```
+
+</li>
+<li>   Construct a 95\% confidence region for the slope coefficients of pH and density. What do you conclude about the statistical significance of $\beta_{pH}$ and $\beta_{density}$?
+```{r}
+library(ellipse)
+library(ggplot2)
+CR95 = ellipse(whitewines.mlr, c(3,4), level=0.95)
+CR95=data.frame(CR95)
+ggplot(data=CR95, aes(x=pH, y=density)) + 
+  geom_path(size=1.5) + 
+  geom_point(x=coef(whitewines.mlr)[3], y=coef(whitewines.mlr)[4], shape=3, size=3, colour='red')
+```
+Obviously, $\beta_{pH}$ and $\beta_{density}$ are statistical significant at $95\%$ level.
+</li>
+
+<li>  Regress `alcohol` against `fixed acidity` and construct a 95\% simultaneous confidence band for the fitted regression line. 
+```{r}
+whitewines.mlr2=lm(alcohol~fixed.acidity,data=whitewines.reg)
+confint(whitewines.mlr2)
+mlr2.band=predict(whitewines.mlr2, interval = "confidence")
+mlr2.band=data.frame(mlr2.band)
+mlr2.band$lwr=mlr2.band$fit-(mlr2.band$fit-mlr2.band$lwr)*sqrt(2*qf(0.05,2,n-2,lower.tail=FALSE))/abs(qt(0.025,n-2))
+mlr2.band$upr=mlr2.band$fit+(mlr2.band$upr-mlr2.band$fit)*sqrt(2*qf(0.05,2,n-2,lower.tail=FALSE))/abs(qt(0.025,n-2))
+head(mlr2.band)
+```
+
+
+</li>
+<li> Plot the raw data corresponding to question (h), fitted regression line, 95\%  point-wise confidence intervals and  95\% confidence band calculated in (h). What do you observe?
+```{r}
+library(ggplot2)
+ggplot(whitewines.reg,aes(fixed.acidity,alcohol))+geom_point()+geom_smooth(method=lm)+geom_ribbon( aes(ymin=mlr2.band$lwr,ymax=mlr2.band$upr),alpha = 0.2, fill="yellow")
+```
+The confidence band is wider than the point-wise the confidence interval.
+</li>
+</ol>

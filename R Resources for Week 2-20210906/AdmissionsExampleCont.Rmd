@@ -1,0 +1,162 @@
+---
+title: "University Admissions R Example Cont'd"
+author: "Alexandra Chronopoulou"
+date: 'Lecture 3 Example'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<br><br>
+
+<h3> <font color=blue > Statistical Inference for Simple Linear Regression </font></h3>
+<br>
+
+The director of admissions of a small college administered a newly designed entrance test to 20 students selected at random from the freshman class in a study to determine whether a student’s grade point average (GPA) at the end of the freshman year (Y) can be predicted from the entrance test score (X). The results of the study  are summarized in the `admissions.txt` file.
+
+
+
+```{r}
+admissions = read.table("admissions.txt", header=FALSE)
+gpa = admissions$V2
+entrance_score = admissions$V1
+admissions.lm = lm(gpa~entrance_score)
+summary(admissions.lm)
+```
+<br>
+<ol type="a">
+ <li> <font color="blue">Can we say that the regression line has a good fit to the data?</font>
+
+
+ We can  plot the regression line along with the connected "point-wise" confidence intervals using `ggplot`:
+```{r, warning=FALSE}
+library(ggplot2)
+scatterplot = ggplot(admissions, aes(V1, V2)) +
+  geom_point(size=4, color='darkblue') + 
+  labs(title="GPA vs. Entrance Score",y="GPA",x="Entrance Score") +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5))
+plot(scatterplot)
+```
+
+The regression line has a relatively good fit to the data. There is some variation of the data around the line, but we have to keep in mind that the sample size in this example is relatively small (n=20).
+</li>
+
+<br>
+
+
+<li><font color="blue">By how much relatively is the total variation in the `gpa`  <i>reduced</i> when the `entrance_score`  is introduced into the analysis? Is this a relatively small or large reduction? </font>
+
+The total variation in student's `gpa`  when the `entrance_score` height is introduced into the analysis is measured by $R^2$. In this example, the $R^2$ is approximately 65% with is a medium-sized reduction.
+
+```{r}
+summary(admissions.lm)$r.square
+```
+
+</li>
+
+<br>
+
+<li> The regression line that we fitted is:
+\[\text{GPA} = 3.0539 + 0.7785 \cdot \text{Entrance_Score}\]
+
+
+As we can see, from the R Output, the fitted values for the coefficients are: 
+\[\hat{\beta}_0 = 3.0539,\,\, \hat{\beta}_1 = 0.7785\]
+```{r}
+admissions.coef = summary(admissions.lm)$coef
+admissions.coef
+```
+
+</li>
+
+<br>
+
+<li> <font color="blue">How do we interpret the slope coefficient <i>in the context of the problem</i>?</font>
+
+The difference in the GPA for two students whose Entrance Scores differ by 1 point will be  0.8.
+</li>
+
+<br>
+
+
+<li><font color="blue">How do we interpret the intercept  <i>in the context of the problem</i>?</font>
+
+In this data set, the intercept does not have a meaningful interpretation.  Why? One can argue that in this case a zero score in an entrance exam is a valid score (although I am not sure if anyone with 0 zero score is admitted!) 
+
+However, zero is a value that we did not observe in our data, and "plugging-in x=0" to the regression line is an extrapolation that is not necessarily correct. To be more specific, we do not know if the line we fitted will also be valid outside the range of the data we observed. Therefore, for out-of-sample predictions, we need to be more careful and aware that the prediction error is significantly larger than  within-sample predictions.
+
+</li>
+<br>
+
+
+
+ 
+<li><font color="blue">How can we test whether or not there is a linear association between `MP` and `AH`? In other words, is the `MP` variable statistically significant?</font>
+
+The hypothesis we want to test is formulated as follows:
+\[\begin{cases}
+&H_0: \beta_1=0\\
+&H_{\alpha}: \beta_1 \neq 0
+\end{cases}\]
+If we use the $t$-test, then $t$=5.83  corresponding $p$-value $= 1.59e-05$ which implies that we reject the null and conclude that the coefficient is <i> statistically significant </i>.
+
+We can also compute the $p$-values <i>manually</i>:
+For the slope:
+```{r}
+2*pt(-admissions.coef[2,1]/admissions.coef[2,2], 18)
+```
+and for the intercept:
+```{r}
+2*pt(-admissions.coef[1,1]/admissions.coef[1,2], 18)
+```
+where `18` are the degrees of freedom associated with the residuals. Indeed,
+```{r}
+admissions.lm$df
+```
+
+In the lecture, we also discussed that this test can also be performed as an $F$- test. The results of this $F$ test are shown at the bottom of the `lm` output. We can also obtain the full ANOVA table, as discussed in the lecture as follows:
+ ```{r}
+admissions.anova = anova(admissions.lm)
+admissions.anova
+ ```
+We can see that the $p$-value of the $F$ test is exactly the same as the one obtained in the regression table from the $t$ test for the slope. We can also verify that the square of the $t$ test statistic is equal to the $F$ test statistic. Indeed,
+```{r}
+admissions.anova[1,4]   ## F- value from ANOVA Table
+admissions.coef[2,3]^2  ## Square of t test
+```
+</li>
+
+
+<br>
+
+<li><font color="blue"> What is the predicted `gpa` for a student with  `entrance_score` equal to 2.1?</font>
+
+
+As we discussed, the <i>point estimate</i>  is obtained by plugging in the “x” value to the fitted regression line. (You can also check this "by hand".)
+
+
+```{r}
+predict(admissions.lm, newdata=data.frame(entrance_score=2.1))
+```
+If we want to obtain a confidence interval we write:
+```{r}
+predict(admissions.lm, newdata=data.frame(entrance_score = 2.1), interval="confidence")
+```
+On the other hand, if we want to obtain a prediction interval we write:
+```{r}
+predict(admissions.lm, newdata=data.frame(entrance_score = 2.1), interval="prediction")
+```
+
+</li>
+</ol>
+
+
+
+
+
+
+ 
+ 
+
+

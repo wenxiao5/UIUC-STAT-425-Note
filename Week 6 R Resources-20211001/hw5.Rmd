@@ -1,0 +1,156 @@
+---
+title: "Homework 5"
+author: "Wenxiao Yang"
+output: html_document
+---
+## Part II: Homework Questions -- to be submitted
+
+
+
+<ol>
+
+<li>  If $n=p$ and the $\mathbf{X}$ matrix is invertible, show that the hat matrix $\mathbf{H}$ is given by the $p\times p$ identity matrix. In this case, what are $h_{ii}$ and $\hat{Y}_{i}$?
+Since $n=p$ and $\mathbf{X}_{n\times p}$ is invertible, exists $\mathbf{X}^{-1}$ and $(\mathbf{X}^T)^{-1}$ s.t.
+$$\mathbf{X}\mathbf{X}^{-1}=\mathbf{X}^{-1}\mathbf{X}=\mathbf{X}^T(\mathbf{X}^T)^{-1}=(\mathbf{X}^T)^{-1}\mathbf{X}^T=\mathbf{I}_{p\times p}$$
+Then,
+$$\mathbf{X}^T\mathbf{H}=\mathbf{X}^T\mathbf{X}(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T=\mathbf{X}^T$$
+$$\mathbf{H}=(\mathbf{X}^T)^{-1}\mathbf{X}^T\mathbf{H}=(\mathbf{X}^T)^{-1}\mathbf{X}^T=\mathbf{I}_{p\times p}$$
+Then $$h_{ii}=1,\ \hat{\mathbf{Y}}_i=y_i$$
+</li>
+
+
+<li> The `whitewines.csv` data set contains information related to  white variants of the Portuguese "<i>Vinho Verde</i>" wine. Specifically, we have recorded the following information:
+
+ (a)  fixed acidity, (b) volatile acidity, (c) citric acid , (d)  residual sugar, (e)  chlorides, (f)  free sulfur dioxide, (g) total sulfur dioxide, (h) density, (i) pH, (j) sulphates, (k) alcohol, (l) quality (score between 0 and 10)
+
+In this homework, our goal is to explain the relationship between alcohol level (dependent variable) and residual sugar, pH, density and fixed acidity.
+```{r}
+whitewines<-read.csv("whitewines.csv",sep = ";")
+whitewines.reg=whitewines[,c(-2,-3,-5,-6,-7,-10,-12)]
+whitewines.mlr=lm(alcohol~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+summary(whitewines.mlr)
+```
+
+<ol type="a">
+<li> Check the constant variance assumption.</li>
+```{r}
+plot(whitewines.mlr, which=1)
+```
+```{r}
+library(lmtest)
+bptest(whitewines.mlr)
+```
+p-value is low, we reject the null hypothesis of constant variace.
+<li> Check the normality assumption.</li>
+```{r}
+plot(whitewines.mlr,which=2)
+```
+```{r}
+ks.test(residuals(whitewines.mlr),y=pnorm)
+```
+Low p-value, we reject the normality assumption.
+<li> Check for the structure of the relationship between the predictors and the response.</li>
+```{r}
+summary(whitewines.mlr)
+```
+
+```{r}
+# residual.sugar variable removed
+r.yresidual.sugar = update(whitewines.mlr, ~pH+density+fixed.acidity)$res
+r.residual.sugar = lm(residual.sugar~pH+density+fixed.acidity,data=whitewines.reg)$res
+tmp1=lm(r.yresidual.sugar ~ r.residual.sugar)
+# pH variable removed
+r.ypH = update(whitewines.mlr, ~residual.sugar+density+fixed.acidity)$res
+r.pH = lm(pH~residual.sugar+density+fixed.acidity,data=whitewines.reg)$res
+tmp2=lm(r.ypH ~ r.pH)
+# density variable removed
+r.ydensity = update(whitewines.mlr, ~residual.sugar+pH+fixed.acidity)$res
+r.density = lm(density~residual.sugar+pH+fixed.acidity,data=whitewines.reg)$res
+tmp3=lm(r.ydensity ~ r.density)
+# fixed.acidity variable removed
+r.yfixed.acidity = update(whitewines.mlr, ~residual.sugar+pH+density)$res
+r.fixed.acidity = lm(fixed.acidity~residual.sugar+pH+density,data=whitewines.reg)$res
+tmp4=lm(r.yfixed.acidity ~ r.fixed.acidity)
+
+plot(r.yresidual.sugar, r.residual.sugar); abline(tmp1)
+plot(r.ypH, r.pH); abline(tmp2)
+plot(r.ydensity, r.density); abline(tmp3)
+plot(r.yfixed.acidity, r.fixed.acidity); abline(tmp4)
+```
+Linearity seems all not hold well.
+<li>  Is any transformation of the predictors suggested?</li>
+```{r}
+whitewines.mlr.log=lm(log(alcohol)~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+bptest(whitewines.mlr.log)
+ks.test(residuals(whitewines.mlr.log),y=pnorm)
+```
+```{r}
+whitewines.mlr.frac=lm(1/alcohol~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+bptest(whitewines.mlr.frac)
+ks.test(residuals(whitewines.mlr.frac),y=pnorm)
+```
+```{r}
+whitewines.mlr.sqrt=lm(sqrt(alcohol)~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+bptest(whitewines.mlr.sqrt)
+ks.test(residuals(whitewines.mlr.sqrt),y=pnorm)
+```
+There is no simple transformation of the predictors suggested. May be Box-Cox Transformation will be better?
+<li> Use the Box-Cox method to determine an optimal transformation of the response. Would it be reasonable to leave the response untransformed?</li>
+```{r}
+library(MASS)
+min(whitewines.reg$alcohol)
+whitewines.transformation=boxcox(whitewines.mlr, lambda=seq(-2, 2, length=400))
+```
+```{r}
+lambda=whitewines.transformation$x[whitewines.transformation$y == max(whitewines.transformation$y)]
+lambda
+```
+$$\lambda=-0.2857143$$
+alcohol level (dependent variable) and residual sugar, pH, density and fixed acidity.
+$$\frac{\text{alcohol level}^\lambda-1}{\lambda}=\beta_1\text{residual sugar}+\beta_2\text{pH}+\beta_3\text{density}+\beta_4\text{fixed acidity}+\varepsilon$$
+I think it is reasonable to leave the response untransformed, because we can almost fix the violation to assumption by predictor transform.
+<li> Use the optimal transformation of the response and refit the additive model. Does this make any difference to the transformations suggested for the predictors?</li>
+```{r}
+whitewines.reg$g_alcohol=(whitewines.reg$alcohol^lambda-1)/lambda
+whitewines.mlr.new=lm(g_alcohol~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+summary(whitewines.mlr.new)
+```
+```{r}
+bptest(whitewines.mlr.new)
+```
+```{r}
+ks.test(residuals(whitewines.mlr.new),y=pnorm)
+```
+```{r}
+# residual.sugar variable removed
+r.yresidual.sugar.new = update(whitewines.mlr.new, ~pH+density+fixed.acidity)$res
+r.residual.sugar = lm(residual.sugar~pH+density+fixed.acidity,data=whitewines.reg)$res
+tmp1.new=lm(r.yresidual.sugar.new ~ r.residual.sugar)
+# pH variable removed
+r.ypH.new = update(whitewines.mlr.new, ~residual.sugar+density+fixed.acidity)$res
+r.pH = lm(pH~residual.sugar+density+fixed.acidity,data=whitewines.reg)$res
+tmp2.new=lm(r.ypH.new ~ r.pH)
+# density variable removed
+r.ydensity.new = update(whitewines.mlr.new, ~residual.sugar+pH+fixed.acidity)$res
+r.density = lm(density~residual.sugar+pH+fixed.acidity,data=whitewines.reg)$res
+tmp3.new=lm(r.ydensity.new ~ r.density)
+# fixed.acidity variable removed
+r.yfixed.acidity.new = update(whitewines.mlr.new, ~residual.sugar+pH+density)$res
+r.fixed.acidity = lm(fixed.acidity~residual.sugar+pH+density,data=whitewines.reg)$res
+tmp4.new=lm(r.yfixed.acidity.new ~ r.fixed.acidity)
+
+plot(r.yresidual.sugar.new, r.residual.sugar); abline(tmp1.new)
+plot(r.ypH.new, r.pH); abline(tmp2.new)
+plot(r.ydensity.new, r.density); abline(tmp3.new)
+plot(r.yfixed.acidity.new, r.fixed.acidity); abline(tmp4.new)
+```
+Looks like helps a liitle in the linearity. Not making any difference.
+
+<ol>
+
+</li>
+
+<ol>
+
+
+

@@ -1,0 +1,73 @@
+---
+title: "Sales Example"
+author: "Alexandra Chronopoulou"
+date: "Lecture 11 Time Series Example"
+output: html_document
+---
+A company wants to predict its sales by using industry sales that are available from the industry's trade association, as a predictor.
+
+```{r}
+sales <- read.table("Sales.txt", header=FALSE)
+names(sales)=c("company_sales", "industry_sales")
+sales$index = seq(1:dim(sales)[1])
+head(sales)
+```
+
+We start by fitting a simple linear regression
+```{r}
+lm.sales = lm(company_sales~industry_sales, data=sales)
+summary(lm.sales)
+```
+The fit of the model looks great!? All the p-values are low, indicating that the industry sales indeed explain the variation in the response and the $R^2$ is extremely high.
+
+Let's take a closer look at the model and check the residual plots:
+
+```{r}
+plot(lm.sales, which=1)
+```
+
+The fitted against residuals plots show that the variance may not be constant.
+
+Let's also plot the residuals against time (the index column in the data frame):
+
+```{r}
+plot(lm.sales$residuals ~ sales$index, type='o', xlab="Time", ylab="Residuals")
+abline(h=0, lty=2, col="blue", lwd=2)
+```
+
+The sequence plot suggest a pattern in the residuals. Let us confirm that via a proper hypothesis test, such as the Durbin-Watson test:
+```{r, warning=FALSE}
+library(lmtest)
+dwtest(lm.sales)
+```
+
+Based on the p-value of the DW test, we conclude that the error terms are <i>positively auto-correlated</i>.
+
+We can now use this to information to fit a regression with autocorrelated errors. In fact, the model we are going to fit looks like
+\[y_i = \beta_0 + \beta_1 y_i + \varepsilon_i\]
+where
+\[\varepsilon_i =  \rho \; \varepsilon_{i-1} + u_i\]
+where the $u_i$ terms are independent normal variables (called disturbances) with mean 0 and variance $\sigma^2$.
+This implies that any error term is the sum of the previous error term and a new disturbance term. The parameter $\rho$ is called the <i> autocorrelation</i> parameter. The model we assumed for the error terms is called a <i> first order autoregressive model</i>, in short AR(1).
+
+In order to fit such a model in R, we use the `gls` function in the `nlme` package as follows:
+
+```{r, warning=FALSE}
+library(nlme)
+lm.sales.cor = gls(company_sales~industry_sales, correlation = corAR1(form= ~ index), data=sales)
+```
+
+Below is the summary output for the new regression model. It is different than the output we are used to obtain with the `lm` function, but it contains the information about model estimates, st. errors and t test, as will as the estimated $\rho$ coefficient (called <font color='red'>phi</font> in R) as well as the estimated variance.
+
+```{r}
+summary(lm.sales.cor)
+```
+
+Because of the complexity of the model, all parameters are estimated using a different method called <i> Restricted Maximum Likelihood</i>. The details of this method are beyond the scope of the course.
+
+<br><br>
+
+
+
+
+

@@ -1,0 +1,91 @@
+---
+title: "Detecting Unusual Observations"
+author: "Alexandra Chronopoulou"
+date: "Lecture #8 Example"
+output: html_document
+---
+
+
+
+### Re-visit the Bike Shares Data to check for Unusual Observations
+
+```{r , results='hide'}
+library(faraway)
+bikeshares <-  read.csv("BikeShares.csv", header=TRUE)
+dim(bikeshares)
+head(bikeshares)
+# We remove columns 1,  7, 8, 9, 10:
+bikeshares.reg = bikeshares[,c(-1,-7,-8,-9,-10)]
+head(bikeshares.reg)
+```
+
+<br>
+<hr>
+<br>
+
+
+#### (a) Check for high-leverage points
+
+<br>
+
+```{r}
+n=dim(bikeshares.reg)[1]; # sample size
+p=4; # 3 predictors we have in the model plus the intercept
+
+bikeshare.mlr = lm(cnt ~ t1 +  hum + wind_speed, data=bikeshares.reg )
+# Compute Leverages
+lev=influence(bikeshare.mlr)$hat
+# Determine which exceed the 2p/n threshold
+newlev = lev[lev>2*p/n]
+
+# Prepare a half-normal plot 
+halfnorm(newlev, 6, labs=as.character(1:length(newlev)), ylab="Leverages")
+```
+
+Which bike shares have high-leverage?
+
+
+```{r, results=FALSE}
+bikeshares.reg[lev > 2*p/n,]
+```
+
+<br><br>
+
+#### (b) Check for outliers
+
+<br>
+
+```{r}
+# Compute Studentized Residuals
+jack=rstudent(bikeshare.mlr);
+
+# The critical value WITH Bonferroni correction is
+qt(.05/(2*n), n-p-1) 
+# The critical value WITHOUT Bonferroni correction is
+qt(.05/2, n-p-1)
+
+# Sort the residuals indescending order to find outliers (if any)
+sort(abs(jack), decreasing=TRUE)[1:10]
+```
+
+As we can see here, we have 8 outliers, i.e. the values that are higher (in absolute value) of the critical T distribution value with Bonferroni correction/. These are  observations: #4462, #5130, #5139, #4471, #15888, #5140, #15217, #15385.
+
+<br><br>
+
+#### (c) Check for high influential points
+
+<br>
+
+```{r}
+# Compute Cook's Distance
+cook = cooks.distance(bikeshare.mlr)
+# Extract max Cook's Distance
+max(cook)
+
+# Prepare a Half Normal Plot of Cook's distances
+halfnorm(cook, 6, labs=as.character(1:length(cook)), ylab="Cook's distances")
+```
+
+
+Although there are no high influential points based on the rule-of-thumb, the Cook’s distance for observation #4471 is much larger than the other samples. 
+

@@ -1,0 +1,49 @@
+%!TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{authblk}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{indentfirst}
+\usepackage{amssymb}
+\setlength{\parindent}{0pt}
+\usetikzlibrary{shapes,snakes}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\DeclareMathOperator{\col}{col}
+\usepackage{booktabs}
+\newtheorem{theorem}{Theorem}
+\newtheorem{note}{Note}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{example}{Example}
+\newtheorem{corollary}{Corollary}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\newcommand{\code}{	exttt}
+\geometry{a4paper,scale=0.8}
+\title{STAT 425 Final Project}
+\author[*]{Wenxiao Yang}
+\affil[*]{Department of Mathematics, University of Illinois at Urbana-Champaign}
+\date{2021}
+\begin{document}
+\maketitle
+
+The factor effects model is as follows:
+$$Y_{ijk}=\mu+\alpha_i+\beta_j+(\alpha\beta)_{ij}+\varepsilon_{ijk}$$
+$Y_{ijk}$: \textit{Production rate} for \textit{Line Speed} $i$, \textit{Percent Loading of Additives} $j$, \textit{replication} $k$.\\
+$\alpha_i$: effect of \textit{Line Speed} $i$ on \textit{Production rate}.\\
+$\beta_j$: effect of \textit{Percent Loading of Additives} $j$ on \textit{Production rate}.\\
+$(\alpha\beta)_{ij}$: interaction term.\\
+The error terms satisfy the usual assumption $\varepsilon_{i j k} \sim \mathcal{N}\left(0, \sigma^{2}\right)$.\\
+Sum Constraints: $\sum_{i} \alpha_{i}=0, \sum_{j} \beta_{j}=0, \sum_{i}(\alpha \beta)_{i j}=\sum_{j}(\alpha \beta)_{i j}=0$.\\
+
+According to the 
+\end{document}

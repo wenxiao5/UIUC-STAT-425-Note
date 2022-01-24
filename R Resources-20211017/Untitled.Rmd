@@ -1,0 +1,62 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+x=seq(0, 1, by=0.001)
+b0 = rep(1, length(x))
+b1 = x
+b2 = x^2
+b3 = x^3
+b4 = x^4
+
+fun1 = 4*b0 -10* b1 + 16*b2 + 2*b3 -10*b4
+
+par(mfrow = c(2,3))
+plot(x, b0, type='l', lty=3, ylab=expression("b"[0]*"(x)=1"))
+plot(x, b1, type='l',lty=3, ylab=expression("b"[1]*"(x)=x"))
+plot(x, b2, type='l',lty=3, ylab=expression("b"[2]*"(x)=x"^2))
+plot(x, b3, type='l',lty=3, ylab=expression("b"[3]*"(x)=x"^3))
+plot(x, b4, type='l',lty=3, ylab=expression("b"[4]*"(x)=x"^4))
+plot(x, fun1, type='l', ylab="f(x)", main=expression("f(x) =  4 - 10 x + 16 x"^2*"+ 2 x"^3*"- 10 x"^4), col="blue", lwd=2)
+
+```
+```{r}
+library(splines)
+
+# Again, generate x values
+x=seq(0, 100, by=0.001)
+n=length(x)
+
+# Define the knots 
+new.knots= c(1/6, 3/6, 5/6)
+
+# Create the B-Slines basis functions
+Bsplines.basis1 = ns(x, df =6, intercept = FALSE)
+dim(Bsplines.basis1)
+Bsplines.basis1
+
+
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,483 @@
+---
+title: "STAT 425 Case Study"
+author: "Giang Le (gianghl2), Wenxiao Yang (wenxiao5), Yuan Chang (changy4)"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+<li> Red Wines Data Set
+
+In the homework, you have already studied a white wines data set. In this case study, we have
+a similar data set available. It is related to the red variant of the Portuguese ”Vinho Verde”
+wine. The variables we have available are the following:
+X1: fixed acidity
+X2: volatile acidity
+X3: citric acid
+X4: residual sugar
+X5: chlorides
+X6: free sulfur dioxide
+X7: total sulfur dioxide
+X8: density
+X9: pH
+X10: sulphates
+Y : alcohol
+
+Our goal is to fit a model to describe the association between alcohol and physiochemical information (potential predictors X1-X10). The data can be found in the redwines.csv
+data set on Moodle.
+
+Instructions
+You should perform a full regression analysis using the tools we have already discussed in class.
+It should include evaluating the statistical significance of the variables in the model, removing
+variables that do not contribute to explaining the variation in the response, check unusual
+observations and model assumptions, perform remedial measures -if necessary.
+</li>
+
+Deliverables
+The case study should be submitted on Gradescope as a group (only once case study per group).
+You should submit:
+(1) a PDF file containing a 2-3 executive summary of the analysis. You need to make sure
+that your report is professionally and clearly written, addressed to someone who knows
+statistics. You should also include a concluding paragraph where you should state your
+conclusions in layman’s terms. Any necessary plots or R output should be attached in an
+appendix. You should include no R code in the summary.
+(2) an R Markdown and corresponding HTML file with comments with all the R code that
+you built to analyze the data set.
+A rubric on which the grading of the case study will be based is posted on Moodle for your
+reference.
+
+
+<!-- These are the categories to be graded: Intro, regression analysis process, 
+diagnotics, remedial measures, correctness of analysis, conclusion, presentation
+and organization, tables plots, R code
+
+Yuan: writing: intro, background of data, summary statistics
+Giang: writing: diagnostics, model selection
+Yuan: writing: conclusion
+Wenxiao: coding -->
+## Part 1: Summary Statistics
+```{r}
+library(dplyr)
+library(faraway)
+library(lmtest)
+library(MASS)
+```
+
+```{r}
+# Read in the data
+redwines <- read.csv("redwines.csv")
+head(redwines)
+```
+
+# Full model
+## diagnostics, correlation check,
+
+```{r}
+pairs(redwines[,-c(11,12)])
+```
+```{r}
+full.model <- lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide+ total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+summary(full.model)
+```
+
+```{r}
+round(cor(redwines[,-c(11,12)]),dig=2)
+```
+We observe $fixed.acidity$ is mildly correlated with $citric.acid$, $density$ and $pH$; $citric.acid$ is mildly correlated with $fixed.acidity$, $volatile.acidity$ and $pH$; $free.sulfur.dioxide$ is mildly correlated with $total.sulfur.dioxide$.
+We consider removing $fixed.acidity$, $citric.acid$ and $free.sulfur.dioxide$.
+Let's look at $free.sulfur.dioxide$ firstly,
+```{r}
+model1 <- lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+summary(model1)
+```
+Great, $total.sulfur.dioxide$'s p-vlaue decreases significantly.
+```{r}
+anova(model1, full.model)
+```
+Since F is large, we can drop the $free.sulfur.dioxide$.
+```{r}
+x = model.matrix(model1)[,-1]
+dim(x)
+x = x-matrix(apply(x,2,mean),1599,9, byrow=TRUE)
+x = x/matrix(apply(x,2,sd),1599,9, byrow=TRUE)
+apply(x,2,mean)
+apply(x,2,sd)
+```
+```{r}
+e = eigen(t(x) %*% x)
+sqrt(e$val[1]/e$val[9])
+```
+condition number is 5.26 lower than 30, there is no collinearity now.
+
+Then we will use model1 in the following.
+## Detect Unusual Observations
+### Check High Leverage Points
+```{r}
+n=dim(redwines)[1]
+p=10
+lev=influence(model1)$hat
+highlev=lev[lev>2*p/n] #find high leverage points
+highlev
+```
+
+```{r}
+halfnorm(lev,6, labs=as.character(1:length(highlev)), ylab="Leverages")
+```
+### Check Outliers
+```{r}
+StuR=rstudent(model1)
+qt(0.05/(2*n),n-p-1)
+```
+```{r}
+sort(abs(StuR),decreasing=TRUE)[1:10]
+```
+No outliers
+
+### Check High Influential Points
+```{r}
+cook=cooks.distance(model1)
+max(cook)
+```
+```{r}
+halfnorm(cook,6,labs=as.character(1:length(cook)),ylab="Cook's distances")
+```
+We have some high leverage points, but none of them are high influential.
+We don't have outliers.
+
+## Check Assumptions
+### Check Homoscedasticity
+```{r}
+plot(model1,which=1)
+```
+```{r}
+bptest(model1)
+```
+Homoscedasticity doesn't hold
+
+### Check Normality
+```{r}
+plot(model1,which=2)
+```
+```{r}
+hist(model1$residuals)
+```
+```{r}
+ks.test(residuals(model1), y=pnorm)
+```
+Normality doesn't hold.
+
+## Use Box Cox Transformation
+```{r}
+min(redwines$alcohol)
+```
+Make sure all alchohol values are positive.
+```{r}
+model.transformation=boxcox(model1,lambda=seq(-2, -1, by=0.01))
+```
+
+```{r}
+model.transformation$x[model.transformation$y==max(model.transformation$y)]
+```
+$\lambda$ is -1.53
+```{r}
+model_bx=lm((alcohol^{-1.53}-1)/(-1.53) ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+summary(model_bx)
+```
+All predictors are significant. We don't need to move any predictors.
+Now let's check unusual observations and assumptions again.
+## Check Unusual Observations
+### Check High Leverages
+```{r}
+lev_new=influence(model_bx)$hat
+highlev_new=lev_new[lev_new>2*p/n] #find high leverage points
+highlev_new
+```
+```{r}
+halfnorm(lev_new,6, labs=as.character(1:length(highlev_new)), ylab="Leverages")
+```
+### Check Outliers
+```{r}
+StuR_new=rstudent(model_bx)
+qt(0.05/(2*n),n-p-1)
+```
+```{r}
+sort(abs(StuR_new),decreasing=TRUE)[1:10]
+```
+No outliers
+
+### Check High Influential Points
+```{r}
+cook_new=cooks.distance(model_bx)
+max(cook_new)
+```
+```{r}
+halfnorm(cook_new,6,labs=as.character(1:length(cook_new)),ylab="Cook's distances")
+```
+We have some high leverage points, but none of them are high influential.
+We don't have outliers.
+
+## Check Assumptions
+### Check Homoscedasticity
+```{r}
+plot(model_bx,which=1)
+```
+```{r}
+bptest(model_bx)
+```
+Homoscedasticity doesn't hold
+
+### Check Normality
+```{r}
+plot(model_bx,which=2)
+```
+```{r}
+hist(model_bx$residuals)
+```
+```{r}
+ks.test(residuals(model_bx), y=pnorm)
+```
+Normality doesn't hold.
+Box-Cox Transformation can't fix the violation to assumptions.
+
+### Check Non-linearity
+#### Added-variables plots
+```{r}
+#fixed.acidity
+modela1 = lm(alcohol ~ volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+modela2 = lm(fixed.acidity ~ volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+reg.a = lm(modela1$residuals ~ modela2$residuals)
+#volatile.acidity
+modelb1 = lm(alcohol ~ fixed.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+modelb2 = lm(volatile.acidity ~ fixed.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+reg.b = lm(modelb1$residuals ~ modelb2$residuals)
+#citric.acid
+modelc1 = lm(alcohol ~ fixed.acidity + volatile.acidity + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+modelc2 = lm(citric.acid ~ fixed.acidity + volatile.acidity + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+reg.c = lm(modelc1$residuals ~ modelc2$residuals)
+#residual.sugar
+modeld1 = lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+modeld2 = lm(residual.sugar ~ fixed.acidity + volatile.acidity + citric.acid + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+reg.d = lm(modeld1$residuals ~ modeld2$residuals)
+#chlorides
+modele1 = lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+modele2 = lm(chlorides ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+reg.e = lm(modele1$residuals ~ modele2$residuals)
+#total.sulfur.dioxide
+modelf1 = lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + density + pH + sulphates, data=redwines[,-c(12)])
+modelf2 = lm(total.sulfur.dioxide ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  density + pH + sulphates, data=redwines[,-c(12)])
+reg.f = lm(modelf1$residuals ~ modelf2$residuals)
+#density
+modelg1 = lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + pH + sulphates, data=redwines[,-c(12)])
+modelg2 = lm(density ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + pH + sulphates, data=redwines[,-c(12)])
+reg.g = lm(modelg1$residuals ~ modelg2$residuals)
+#pH
+modelh1 = lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + sulphates, data=redwines[,-c(12)])
+modelh2 = lm(pH ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + sulphates, data=redwines[,-c(12)])
+reg.h = lm(modelh1$residuals ~ modelh2$residuals)
+#sulphates
+modeli1 = lm(alcohol ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH, data=redwines[,-c(12)])
+modeli2 = lm(sulphates ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides +  total.sulfur.dioxide + density + pH, data=redwines[,-c(12)])
+reg.i = lm(modeli1$residuals ~ modeli2$residuals)
+```
+
+```{r}
+plot(modela2$residuals, modela1$residuals)
+abline(reg.a, col="red")
+```
+```{r}
+plot(modelb2$residuals, modelb1$residuals)
+abline(reg.b, col="red")
+```
+```{r}
+plot(modelc2$residuals, modelc1$residuals)
+abline(reg.c, col="red")
+```
+
+```{r}
+plot(modeld2$residuals, modeld1$residuals)
+abline(reg.d, col="red")
+```
+```{r}
+plot(modele2$residuals, modele1$residuals)
+abline(reg.e, col="red")
+```
+```{r}
+plot(modelf2$residuals, modelf1$residuals)
+abline(reg.f, col="red")
+```
+```{r}
+plot(modelg2$residuals, modelg1$residuals)
+abline(reg.g, col="red")
+```
+```{r}
+plot(modelh2$residuals, modelh1$residuals)
+abline(reg.h, col="red")
+```
+```{r}
+plot(modeli2$residuals, modeli1$residuals)
+abline(reg.i, col="red")
+```
+All plots except the $residual.sugar$, we try to transform the $residual.sugar$.
+```{r}
+#residual.sugar
+modeld1 = lm(log(alcohol) ~ fixed.acidity + volatile.acidity + citric.acid + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+modeld2 = lm(log(residual.sugar) ~ fixed.acidity + volatile.acidity + citric.acid + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+reg.d = lm(modeld1$residuals ~ modeld2$residuals)
+plot(modeld2$residuals, modeld1$residuals)
+abline(reg.d, col="red")
+```
+We can find that $\log({\text{residual.sugar}})$ works much better. Then, Let's try the new model!
+
+## New Model
+```{r}
+modelN=lm(log(alcohol) ~ fixed.acidity + volatile.acidity + citric.acid + log(residual.sugar) + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+summary(modelN)
+```
+$volatile.acidity$ isn't significant. Let's try to remove it!
+```{r}
+modelN2=lm(log(alcohol) ~ fixed.acidity + citric.acid + log(residual.sugar) + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+summary(modelN2)
+```
+
+Now let's check unusual observations and assumptions again.
+## Check Unusual Observations
+### Check High Leverages
+```{r}
+p=9
+levN=influence(modelN2)$hat
+highlevN=levN[levN>2*p/n] #find high leverage points
+highlevN
+```
+```{r}
+halfnorm(levN,6, labs=as.character(1:length(highlevN)), ylab="Leverages")
+```
+### Check Outliers
+```{r}
+StuRN=rstudent(modelN2)
+qt(0.05/(2*n),n-p-1)
+```
+```{r}
+sort(abs(StuRN),decreasing=TRUE)[1:10]
+```
+#652 is an outlier.
+
+### Check High Influential Points
+```{r}
+cookN=cooks.distance(modelN2)
+max(cookN)
+```
+```{r}
+halfnorm(cookN,6,labs=as.character(1:length(cookN)),ylab="Cook's distances")
+```
+We have some high leverage points and one outlier, but none of them are high influential.
+
+## Check Assumptions
+### Check Homoscedasticity
+```{r}
+plot(modelN2,which=1)
+```
+```{r}
+bptest(modelN2)
+```
+Homoscedasticity doesn't hold
+
+### Check Normality
+```{r}
+plot(modelN2,which=2)
+```
+```{r}
+hist(modelN2$residuals)
+```
+```{r}
+ks.test(residuals(modelN2), y=pnorm)
+```
+Normality doesn't hold.
+Still can't fix the violation to assumptions.
+
+
+We will use Generalized Least Squares next.
+
+
+## Generalized Least Squares
+```{r}
+lm.resid=lm(abs(modelN2$residuals)~ fixed.acidity + citric.acid + log(residual.sugar) + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines[,-c(12)])
+summary(lm.resid)
+```
+```{r}
+redwines$weight = 1/lm.resid$fitted.values^2
+head(redwines)
+```
+```{r}
+ModelGLS = lm(log(alcohol) ~ fixed.acidity + citric.acid + log(residual.sugar) + chlorides +  total.sulfur.dioxide + density + pH + sulphates, data=redwines, weights=weight)
+summary(ModelGLS)
+```
+## Detect Unusual Observations
+### Check High Leverage Points
+```{r}
+p=9
+lev=influence(ModelGLS)$hat
+highlev=lev[lev>2*p/n] #find high leverage points
+highlev
+```
+
+```{r}
+halfnorm(lev,6, labs=as.character(1:length(highlev)), ylab="Leverages")
+```
+### Check Outliers
+```{r}
+StuR=rstudent(ModelGLS)
+qt(0.05/(2*n),n-p-1)
+```
+```{r}
+sort(abs(StuR),decreasing=TRUE)[1:10]
+```
+No ouliers
+
+### Check High Influential Points
+```{r}
+cook=cooks.distance(ModelGLS)
+sort(abs(cook),decreasing=TRUE)[1:10]
+```
+```{r}
+halfnorm(cook,6,labs=as.character(1:length(cook)),ylab="Cook's distances")
+```
+We have some high leverage points, but none of them are high influential.
+No outliers.
+
+## Check Assumptions
+### Check Homoscedasticity
+```{r}
+plot(ModelGLS,which=1)
+```
+```{r}
+bptest(ModelGLS)
+```
+Homoscedasticity doesn't hold
+
+### Check Normality
+```{r}
+plot(ModelGLS,which=2)
+```
+```{r}
+hist(ModelGLS$residuals)
+```
+```{r}
+ks.test(residuals(ModelGLS), y=pnorm)
+```
+Still can't fix the violation to assumptions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

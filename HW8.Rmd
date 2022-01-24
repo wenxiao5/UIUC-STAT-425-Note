@@ -1,0 +1,227 @@
+---
+title: "HW8 Wenxiao Yang"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Problem 1
+## (a)
+iii
+Lasso Regression is find the $\hat{\mathbf{\beta}}$ such that minimize $(y-X\beta)^T(y-X\beta)+\lambda\sum_j|\beta_j|$ 
+or $(y-X\beta)^T(y-X\beta)$ subject to $\sum_j|\beta_j|\leq t$
+We can find it is less flexible, and it will elimate some $\beta_i=0$ compare to OLS i.e. less predictors in this model.
+Less predictors will increase model bias and decrease variance.
+So Lasso will give improved prediction accuracy when its increase in bias is less than its decrease in variance.
+
+## (b)
+iii
+Ridge Regression is find the $\hat{\mathbf{\beta}}$ such that minimize $(y-X\beta)^T(y-X\beta)+\lambda\sum_j\beta_j^2$ 
+or $(y-X\beta)^T(y-X\beta)$ subject to $\sum_j\beta_j^2\leq t^2$
+We can find it is less flexible, and it will control the $\beta_i^2$ not be too high, which will decrease variance but increase model bias.
+So Ridge will give improved prediction accuracy when its increase in bias is less than its decrease in variance.
+
+# Problem 2
+```{r}
+library(ISLR)
+data(College)
+head(College)
+```
+## (a)
+```{r}
+College["Rate"]=College["Accept"]/College["Apps"]
+head(College)
+```
+```{r}
+plot(College$Private,College$Rate,xlab="Private",ylab="Rate")
+plot(College$Enroll,College$Rate,xlab="Enroll",ylab="Rate")
+plot(College$Top10perc,College$Rate,xlab="Top10perc",ylab="Rate")
+plot(College$Top25perc,College$Rate,xlab="Top25perc",ylab="Rate")
+plot(College$F.Undergrad,College$Rate,xlab="F.Undergrad",ylab="Rate")
+plot(College$P.Undergrad,College$Rate,xlab="P.Undergrad",ylab="Rate")
+plot(College$Outstate,College$Rate,xlab="Outstate",ylab="Rate")
+plot(College$Room.Board,College$Rate,xlab="Room.Board",ylab="Rate")
+plot(College$Books,College$Rate,xlab="Books",ylab="Rate")
+plot(College$Personal,College$Rate,xlab="Personal",ylab="Rate")
+plot(College$PhD,College$Rate,xlab="PhD",ylab="Rate")
+plot(College$Terminal,College$Rate,xlab="Terminal",ylab="Rate")
+plot(College$S.F.Ratio,College$Rate,xlab="S.F.Ratio",ylab="Rate")
+plot(College$perc.alumni,College$Rate,xlab="perc.alumni",ylab="Rate")
+plot(College$Expend,College$Rate,xlab="Expend",ylab="Rate")
+plot(College$Grad.Rate,College$Rate,xlab="Grad.Rate",ylab="Rate")
+```
+
+```{r}
+set.seed(425)
+n=dim(College)[1]
+train.index=sample(n,0.7*n)
+data.training=College[train.index,c(-2,-3)]
+data.testing=College[-train.index,c(-2,-3)]
+```
+
+## (b)
+```{r}
+lm.fit=lm(Rate~.,data=data.training)
+mean(lm.fit$res^2)
+```
+MSE of training data is 0.01450403
+```{r}
+lm.pre=predict(lm.fit,data=data.testing)
+mean((data.testing$Rate-lm.pre)^2)
+```
+MSE of testing data is 0.02839502
+
+## (c)
+```{r}
+library(leaps)
+C.leaps=regsubsets(Rate~.,data=College[,c(-2,-3)],nvmax=16)
+rs=summary(C.leaps)
+rs
+```
+### adjusted $R^2$
+```{r}
+rs$adjr2
+```
+```{r}
+rs$which[which.max(rs$adjr2),]
+```
+The model adjusted $R^2$ chooses
+$$Rate=\beta_0+\beta_1 PrivateYes+\beta_2 Enroll+ \beta_3 Top10perc+ \beta_4 P.Undergrad+\beta_5 Outstate+\beta_6 Room.Board+\beta_7 Books\\+\beta_8 S.F.Ratio+\beta_9 perc.alumni+\beta_{10} Expend+\beta_{11}Grad.Rate+\varepsilon$$
+```{r}
+lm.fit1=lm(Rate~.,data=data.training[,c(-4,-5,-10,-11,-12)])
+mean(lm.fit1$res^2)
+```
+MSE of training data is 0.01462862
+```{r}
+lm.pre1=predict(lm.fit1,data=data.testing)
+mean((data.testing$Rate-lm.pre1)^2)
+```
+MSE of testing data is 0.0283374
+
+### AIC
+```{r}
+m=2:17
+Aic=n*log(rs$rss/n)+2*m
+Aic
+```
+```{r}
+rs$which[which.min(Aic),]
+```
+The model $AIC$ chooses
+$$Rate=\beta_0+\beta_1 PrivateYes+\beta_2 Enroll+ \beta_3 Top10perc+ \beta_4 P.Undergrad+\beta_5 Outstate+\beta_6 Room.Board+\beta_7 Books\\+\beta_8 S.F.Ratio+\beta_9 perc.alumni+\beta_{10} Expend+\beta_{11}Grad.Rate+\varepsilon$$
+Which is same as the model derived by adjusted $R^2$, so
+MSE of training data is 0.01462862
+MSE of testing data is 0.0283374
+
+### BIC
+```{r}
+rs$bic
+```
+```{r}
+rs$which[which.min(rs$bic),]
+```
+The model $BIC$ chooses
+$$Rate=\beta_0+\beta_1 PrivateYes+\beta_2 Enroll+ \beta_3 Top10perc+ \beta_4 P.Undergrad+\beta_5 Outstate+\beta_6 Room.Board+\beta_7 Books\\+\beta_8 S.F.Ratio+\beta_{9} Expend+\beta_{10}Grad.Rate+\varepsilon$$
+```{r}
+lm.fit2=lm(Rate~.,data=data.training[,c(-4,-5,-10,-11,-12,-14)])
+mean(lm.fit2$res^2)
+```
+MSE of training data is 0.0146697
+```{r}
+lm.pre2=predict(lm.fit2,data=data.testing)
+mean((data.testing$Rate-lm.pre2)^2)
+```
+MSE of testing data is 0.02836103
+
+## (d) Ridge
+```{r}
+library(glmnet)
+ridge.fit=cv.glmnet(model.matrix(Rate~., data=data.training), data.training$Rate,nfolds=10, alpha=0)
+ridge.lambda=ridge.fit$lambda.min
+ridge.lambda
+```
+```{r}
+ridge.fit
+```
+Cross-validated: MSE of $\lambda=0.0103$ is 0.001123
+```{r}
+train.ridge.pred=predict(ridge.fit,s=ridge.lambda,newx=model.matrix(Rate~., data=data.training))
+mean((train.ridge.pred-data.training$Rate)^2)
+```
+Training: MSE is 0.01463213
+```{r}
+test.ridge.pred=predict(ridge.fit,s=ridge.lambda,newx=model.matrix(Rate~., data=data.testing))
+mean((test.ridge.pred-data.testing$Rate)^2)
+```
+Testing: MSE is 0.01281851
+
+## (e) lasso
+```{r}
+lasso.fit=cv.glmnet(model.matrix(Rate~., data=data.training), data.training$Rate,nfolds=10, alpha=1)
+lasso.lambda=lasso.fit$lambda.min
+lasso.lambda
+```
+```{r}
+lasso.fit
+```
+Cross-validated: MSE of $\lambda=0.000168$ is 0.001143
+```{r}
+train.lasso.pred=predict(lasso.fit,s=lasso.lambda,newx=model.matrix(Rate~., data=data.training))
+mean((train.lasso.pred-data.training$Rate)^2)
+```
+Training: MSE is 0.01450827
+```{r}
+test.lasso.pred=predict(lasso.fit,s=lasso.lambda,newx=model.matrix(Rate~., data=data.testing))
+mean((test.lasso.pred-data.testing$Rate)^2)
+```
+Testing: MSE is 0.01283959
+
+## (f)PCR
+```{r}
+library(pls)
+```
+```{r}
+pcr.fit=pcr(Rate~.,data=data.training,scale=TRUE,validation="CV")
+summary(pcr.fit)
+```
+
+
+```{r}
+validationplot(pcr.fit,val.type="MSEP")
+```
+I will use 12 components accoring to the plot. M=12
+```{r}
+pcr.pred=predict(pcr.fit,data.testing,ncomp=12)
+mean((pcr.pred-data.testing$Rate)^2)
+```
+The MSE of test is 0.01287599.
+
+## (g)
+```{r}
+T=mean((mean(data.testing$Rate)-data.testing$Rate)^2)
+```
+Adjusted $R^2$, AIC
+```{r}
+1-mean((data.testing$Rate-lm.pre1)^2)/T
+```
+BIC
+```{r}
+1-mean((data.testing$Rate-lm.pre2)^2)/T
+```
+Ridge
+```{r}
+1-mean((test.ridge.pred-data.testing$Rate)^2)/T
+```
+Lasso
+```{r}
+1-mean((test.lasso.pred-data.testing$Rate)^2)/T
+```
+PCR
+```{r}
+1-mean((pcr.pred-data.testing$Rate)^2)/T
+```
+We can explain 0.352712 at most.
+All methods don't work well. I would recommend Ridge which is relative good.
+
+
+
+

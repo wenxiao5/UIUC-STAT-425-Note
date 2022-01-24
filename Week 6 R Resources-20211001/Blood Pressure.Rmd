@@ -1,0 +1,21 @@
+---
+title: "Blood Pressure"
+output: html_document
+---
+```{r}
+pressure <- read.table("blood_pressure.txt", header=FALSE)
+names(pressure)=c("age", "pressure")
+head(pressure)
+lm.pressure = lm(pressure~age, data=pressure)
+summary(lm.pressure)
+lm.resid = lm(abs(lm.pressure$residuals) ~ pressure$age)
+summary(lm.resid)
+pressure$weight = 1/lm.resid$fitted.values^2
+lm.pressure.weights = lm(pressure~age, data=pressure, weights=weight)
+plot(pressure ~ age, data=pressure, cex=lm.resid$fitted.values);
+points(pressure ~ age, data=pressure, pch=2)
+abline(lm.pressure, col="red", lty=1, lwd=2);
+abline(lm.pressure.weights, col="blue", lty=2, lwd=2);
+legend("topleft", col=c("red", "blue"), lty=c(1,2), legend=c("OLS", "WLS"))
+```
+

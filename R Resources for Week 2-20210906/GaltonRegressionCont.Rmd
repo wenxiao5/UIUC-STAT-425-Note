@@ -1,0 +1,150 @@
+---
+title: "Galton's Regression towards Mediocrity Cont'd"
+author: "Alexandra Chronopoulou"
+date: "Lecture 3 Example"
+output:
+  html_document: default
+  pdf_document: default
+---
+<br><br>
+
+<h3> <font color=blue > Statistical Inference for Simple Linear Regression </font></h3>
+<br>
+
+In this example, we are going to discuss Galton's study on `Regression Towards Mediocrity in Hereditary Stature` that  was published in `The Journal of the Anthropological Institute of Great Britain and Ireland` in 1886. In this study, Galton recorded the heights of parents and their children and his goal was to investigate whether it is possible to predict a child's height based on her parents' heights. 
+<br>
+
+```{r message=FALSE, warning=FALSE}
+galton <- read.table("Galton.txt", header=TRUE)
+
+# Define the Adjusted Heigth Variable (according to Galton)
+galton$AH <- galton$Height  
+galton$AH[galton$Gender=="F"] <- galton$Height[galton$Gender=="F"]*1.08
+
+# Define the Mid-parental height variavle (according to Galton)
+galton$MP <- (galton$Father + 1.08*galton$Mother)/2
+
+head(galton)
+# Simple Linear Regression
+slr.fit <- lm(AH ~ MP, data=galton)
+summary(slr.fit)
+```
+
+<br>
+<ol type="a">
+ <li> <font color="blue">Can we say that the regression line has a good fit to the data?</font>
+
+
+ We can  plot the regression line along with the connected "point-wise" confidence intervals using `ggplot`:
+```{r, warning=FALSE}
+library(ggplot2)
+ggplot(galton, aes(AH, MP)) + geom_point() + geom_smooth(method=lm)
+```
+
+The line does not have a very good fit to the data, since there is a lot of variation of the data about the estimated regression line.
+</li>
+
+<br>
+
+
+<li><font color="blue">By how much relatively is the total variation in the children's `AH`  <i>reduced</i> when the `MP` height is introduced into the analysis? Is this a relatively small or large reduction? </font>
+
+The total variation in the children's `AH`  when the `MP` height is introduced into the analysis is measured by $R^2$. In this example, the $R^2$ is approximately 26% which is a relatively <i>low </i>reduction.
+
+```{r}
+summary(slr.fit)$r.square
+```
+
+</li>
+
+<br>
+
+
+<li>The fitted regression model reads as follows:
+\[AH = 1.77 + 0.73 \;MP\]
+where $\hat{\beta}_0 = 1.77$ and $\hat{\beta_1}=0.73$. These can also be obtained by
+```{r}
+galton.coef = summary(slr.fit)$coef
+galton.coef
+```
+
+</li>
+
+<br>
+
+
+<li> <font color="blue">How do we interpret the slope coefficient <i>in the context of the problem</i>?</font>
+
+The difference in the Adjusted children's Heights (AH) for two children whose Mid-parental Heights (MP) differ by 1 inch (this is our unit here) is estimated to be  0.7.
+</li>
+
+<br>
+
+
+<li><font color="blue">How do we interpret the intercept  <i>in the context of the problem</i>?</font>
+
+In this example, the intercept does not have a meaningful interpretation.
+</li>
+<br>
+
+ 
+<li><font color="blue"> How can we test whether or not there is a linear association between `MP` and `AH`? In other words, is the `MP` variable statistically significant?</font>
+
+To answer these questions, the hypothesis we want to test is formulated as follows:
+\[\begin{cases}
+&H_0: \beta_1=0\\
+&H_{\alpha}: \beta_1 \neq 0
+\end{cases}\]
+In the lectures, we introduced a $t$-test statistic to test this hypothesis. Here, we can find the information related to this test in the R output. Specifically, the test statistic value is $t$=17.772 and the corresponding $p$-value $< 2 e-16$ which implies that we reject the null and conclude that the coefficient is  statistically significant.
+
+We can also compute the $p$-values <i>manually</i>:
+For the slope:
+```{r}
+2*pt(-galton.coef[2,1]/galton.coef[2,2], 896)
+```
+where `896` are the degrees of freedom associated with the residuals. Indeed,
+```{r}
+slr.fit$df
+```
+
+
+In the lecture, we also discussed that we can test this hypothesis using  an $F$ test. The results of this $F$ test are shown at the bottom of the `lm` output. We can also obtain the full ANOVA table as follows:
+ ```{r}
+galton.anova = anova(slr.fit)
+galton.anova
+ ```
+We can see that the $p$-value of the $F$ test is exactly the same as the one obtained in the regression table from the $t$ test for the slope. We can also verify that the <i>square of the $t$ test statistic is equal to the $F$ test statistic</i>. Indeed,
+```{r}
+galton.anova[1,4]   ## F- value from ANOVA Table
+galton.coef[2,3]^2  ## Square of t test
+```
+
+<i> <u>R Remark:</u></i> Observe  that the anova output can be treated as a `data.frame`. So, all the information can be extracted in the same way that we extract information from a `data.frame`.
+</li>
+
+
+<br>
+
+<li><font color="blue"> What is the predicted `Adjusted Height` for a Child with parents with `Mid-parental Height` equal to 70?</font>
+
+
+As we discussed, the <i>point estimate</i>  is obtained by plugging in the “x” value to the fitted regression line. (You can also check this "by hand".)
+
+```{r}
+predict(slr.fit, newdata=data.frame(MP=70))
+```
+
+If we want to obtain a 95\% <u>confidence interval</u> we write:
+```{r}
+predict(slr.fit, newdata=data.frame(MP = 70), interval="confidence")
+```
+
+On the other hand, if we want to obtain a  95\% <u>prediction interval</u> we write:
+```{r}
+predict(slr.fit, newdata=data.frame(MP = 70), interval="prediction")
+```
+
+</li>
+</ol>
+
+

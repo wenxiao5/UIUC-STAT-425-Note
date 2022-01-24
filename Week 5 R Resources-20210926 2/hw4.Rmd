@@ -1,0 +1,75 @@
+---
+title: "Homework 4"
+author: "Alexandra Chronopoulou"
+output: html_document
+---
+
+
+## Multiple Linear Regression
+
+
+
+### Part I: Practice Questions
+
+
+<ol>
+
+<li> \textbf{Grocery Retailer} 
+A large national grocery retailer tracks productivity and cost of its facilities closely. The data in the `grocery.txt` file were obtained from a single distribution center for a one year period. Each data point for each variable represents one week of activity. The variables included are the number of cases shipped ($X_1$), the indirect costs of the total labor hours as a percentage ($X_2$), a qualitative predictor called holiday that is called in one of the week has a holy day and zero otherwise ($X_3$), and the total labor hours ($Y$).
+<ol type="a">
+<li> Identify any outlying $Y$ observations. Use the Bonferroni outlier test procedure with $\alpha=.05$. State decision rule and conclusion.
+<li>  Obtain the diagonal elements of the hat matrix. Identify any high leverage points. If any, are they good or bad?
+</li>
+<li> Cases 16, 22, 43, and 48 appear to be outlying $X$ observations, and cases 10, 32, 38, and 40 appear to be outlying $Y$ observations. Obtain the Cook's distance values for each of these cases to assess their influence. What do you conclude?
+</li>
+<ol>
+</li>
+
+
+<li> Use the  `teengamb` data from the `faraway` library to fit a model with gamble as the response and the other variables as predictors.
+<ol type="a">
+<li>   Predict the amount that a male with average (given this data) status, income and verbal score would gamble along with an appropriate 95\% confidence interval.
+</li>
+<li> Repeat the prediction for a male with maximal values (for this data) of status income and verbal score. Which confidence interval is wider and why? Is this result expected?
+</li>
+<li>  Fit a model with $\sqrt{gamble}$  as a response but with the same predictors. Now predict the response and  give a 95\% prediction interval for the individual in (a). Take care to give your answer in the original units of the response.
+</li>
+<li>  Repeat the prediction for the model in (c) for a female with status= 20,  income = 1,  verbal=10. Comment on the credibility of the result.
+</li>
+<li>  Using the model with gamble as the response, check for large leverage points, outliers, and influential points.
+</li>
+
+</li>
+</ol>
+
+### Part II: Homework Questions -- to be submitted
+
+The `whitewines.csv` data set contains information related to  white variants of the Portuguese "Vinho Verde" wine. Specifically, we have recorded the following information:
+
+(a)  fixed acidity, (b)  volatile acidity, (c)  citric acid, (d)  residual sugar, (e)  chlorides , (f)  free sulfur dioxide, (g) total sulfur dioxide, (h)  density, (i) pH, (j) sulphates, (k)  alcohol, (l)  quality (score between 0 and 10)
+
+
+In this homework, our goal is to explain the relationship between alcohol level (dependent variable) and residual sugar, pH, density and fixed acidity.
+
+<ol type="a">
+<li>  Identify any outlying $Y$ observations. Use the Bonferroni outlier test procedure with $\alpha=.05$. State decision rule and conclusion.
+</li>
+<li>  Obtain the diagonal elements of the hat matrix and identify any high leverage points. If any, are they good or bad?
+</li>
+<li>  Use Cook's distance to investigate whether there are any high influential points. What do you conclude?
+</li>
+
+<li>  Calculate Cook's distance $D_i$ for each case and prepare an index plot. Are any cases influential according to this measure?
+</li>
+<li>   Predict the amount of alcohol of a white wine with  residual.sugar = 1.7 , pH = 3, density = 1, fixed.acidity = 6.3  with an appropriate 95\% confidence interval.
+
+<li>   Predict the amount of alcohol of a white wine with  residual.sugar = 67 , pH = 4, density = 1.1, fixed.acidity = 15 with an appropriate 95\% prediction interval.
+</li>
+<li>   Construct a 95\% confidence region for the slope coefficients of pH and density. What do you conclude about the statistical significance of $\beta_{pH}$ and $\beta_{density}$?
+</li>
+
+<li>  Regress `alcohol` against `fixed acidity` and construct a 95\% simultaneous confidence band for the fitted regression line. 
+</li>
+<li> Plot the raw data corresponding to question (h), fitted regression line, 95\%  point-wise confidence intervals and  95\% confidence band calculated in (h). What do you observe?
+</li>
+</ol>

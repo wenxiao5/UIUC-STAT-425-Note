@@ -1,0 +1,121 @@
+---
+title: "Homework 3"
+author: "Wenxiao Yang"
+date: "9/20/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+
+### Part II: Homework Questions -- to be submitted
+
+<ol>
+<li>    Derive a formula relating $R^2$ and the $F$ -test for the regression. You can find the formula in the lecture slides. Here you need to derive it
+</li>
+$$F=\frac{(RSS_{0}-RSS_{\alpha})/q}{RSS_{\alpha}/(n-p)}=\frac{(\frac{RSS_{0}}{TSS}-\frac{RSS_{\alpha}}{TSS})/q}{\frac{RSS_{\alpha}}{TSS}/(n-p)}=\frac{((1-R_R^2)-(1-R_F^2))/(df_F-df_R)}{(1-R_F^2)/df_F}=\frac{(R_F^2-R_R^2)/(df_R-df_F)}{(1-R_F^2)/df_F}$$
+
+<li> The `whitewines.csv` data set contains information related to  white variants of the Portuguese "Vinho Verde" wine. Specifically, we have recorded the following information:
+(a)  `fixed acidity`, (b) `volatile acidity`, (c) `citric acid` , (d)  `residual sugar`, (e)  `chlorides` , (f)  `free sulfur dioxide`, (g) `total sulfur dioxide`, (h)  `density`, (i) `pH`, (j) `sulphates`, (k)  `alcohol`, (l)  `quality` (score between 0 and 10)
+
+
+In this homework, our goal is to explain the relationship between `alcohol level` (dependent variable) and `residual sugar`, `pH`, `density` and `fixed acidity`.
+
+<ol type="a">
+<li> Fit a regression model to the data for the four predictor variables mentioned above. State the estimated regression function.
+```{r}
+whitewines.data<-read.csv("whitewines.csv",sep=";",header = TRUE)
+whitewines.reg=whitewines.data[,c(-2,-3,-5,-6,-7,-10,-12)]
+whitewines.mlr=lm(alcohol~residual.sugar+pH+density+fixed.acidity,data=whitewines.reg)
+summary(whitewines.mlr)
+```
+```{r}
+summary(whitewines.mlr)$coefficient
+```
+
+$$\widehat{\text{alcohol level}}=678.9634114+0.2366782\text{ residual sugar}+2.5354458\text{ pH}-685.8105090\text{ density}+0.5352304\text{ fixed acidity}$$
+</li>
+
+<li> Prepare partial scatter plots for all  5 variables under consideration. What do you observe?
+```{r}
+par (mfrow=c (2 ,2))
+plot(whitewines.reg$residual.sugar, whitewines.reg$alcohol, xlab ="residual sugar", ylab = "alcohol level" )
+plot(whitewines.reg$pH, whitewines.reg$alcohol, xlab ="pH", ylab = "alcohol level" )
+plot(whitewines.reg$density, whitewines.reg$alcohol, xlab ="density", ylab = "alcohol level" )
+plot(whitewines.reg$fixed.acidity, whitewines.reg$alcohol, xlab ="fixed acidity", ylab = "alcohol level" )
+```
+It is obvious that residual sugar, density and fixed acidity are all negative correlated to alcohol level. However, the relation between pH and alcohol level can't be easily detected.
+</li>
+
+<li> Compute the correlation matrix for all the 5 variables. What are your observations?
+```{r}
+cor(whitewines.reg)
+```
+The covariance of density and alcohol level is low(close to -1), which means they are strongly negative related to each other.
+The covariance of density and residual sugar is high(close to 1), which means they are strongly positive related to each other.
+</li>
+<li> Calculate the coefficient of multiple determination $R^2$.  Interpret your results.
+```{r}
+summary(whitewines.mlr)$r.square
+```
+$$R^2=0.8541622$$
+Which means $85.41622\%$ of total variance can be explained by the 4 variables.
+<li> Test whether there is a linear regression relation, using $\alpha=0.05$. State the alternatives, decision rule, and conclusion. What does your test <i>imply</i> about $\beta_1$, $\beta_2$, $\beta_3$ and $\beta_4$?
+$$
+\left\{\begin{array}{l}
+H_{0}: \beta_{1}=\beta_2=\beta_3=\beta_4=0\ &(\text{null})\\
+H_{\alpha}:\text{For some }j=1,2,3,4:\ \beta_{j} \neq 0\ &(\text{alternative})
+\end{array}\right.
+$$
+```{r}
+summary(whitewines.mlr)$fstat
+```
+the f-statistics is 7164.496 with ${df}_1=4$, ${df}_2=4893$, then we need to compute the $p-$value. If the $p-$value$<0.05$, reject null hypothesis.
+```{r}
+1-pf(summary(whitewines.mlr)$fstat[1],4,4893)
+```
+The $p-$value is $0<0.05$, so we reject the null hypothesis. Which means there is a linear regression relation. This also imply there is at least one $\beta_j\neq0,\ j=1,2,3,4$.
+</li>
+
+<li> Test whether $X_3$ can be dropped from the regression model given that $X_1$, $X_2$ are retained. Use  level of significance 0.025. State the alternatives, decision rule and conclusion.
+$$
+\left\{\begin{array}{l}
+H_{0}: \beta_3=0\ &(\text{null})\\
+H_{\alpha}:\beta_3\neq0\ &(\text{alternative})
+\end{array}\right.
+$$
+```{r}
+whitewines.mlr.full=lm(alcohol~residual.sugar+pH+density,data=whitewines.reg)
+whitewines.mlr.reduced1=lm(alcohol~residual.sugar+pH,data=whitewines.reg)
+anova (whitewines.mlr.reduced1, whitewines.mlr.full)
+```
+f-statistics is 11770. Then we need to compute $p-$value. If the $p-$value$<0.025$, we can reject the null hypothesis.
+```{r}
+1-pf(11770,1,4894)
+```
+The $p-$value is $0<0.025$, so we reject the null hypothesis. Which means $X_3$ can't be dropped.
+
+</li>
+
+<li> Test whether both $X_2$ and $X_3$ can be dropped from the regression model, given that $X_1$ is retained. Use  level of significance 0.025. State the alternatives, decision rule and conclusion.
+$$
+\left\{\begin{array}{l}
+H_{0}: \beta_1=\beta_2=0\ &(\text{null})\\
+H_{\alpha}:\beta_1\neq0\text{ or }\beta_2\neq0\ &(\text{alternative})
+\end{array}\right.
+$$
+```{r}
+whitewines.mlr.reduced2=lm(alcohol~density,data=whitewines.reg)
+anova (whitewines.mlr.reduced2, whitewines.mlr.full)
+```
+f-statistics is 1651. Then we need to compute $p-$value. If the $p-$value$<0.025$, we can reject the null hypothesis.
+```{r}
+1-pf(1651,2,4894)
+```
+The $p-$value is $0<0.025$, so we reject the null hypothesis. Which means $X_1$ and $X_2$ can't be dropped together.
+</li>
+<ol>
+
+
+<ol>

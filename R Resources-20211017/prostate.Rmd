@@ -1,0 +1,293 @@
+---
+title: "Data Analysis Case Study"
+author: "Alexandra Chronopoulou"
+output: html_document
+---
+
+This is a complete  analysis of the `prostate.txt` data set.
+
+<br>
+
+## Prostate Data Analysis
+
+Serum prostate-specific antigen (PSA) was determined in 97 men with advanced prostate cancer. PSA is a well-established screening test for prostate cancer. The oncologists wanted to examine the <i>correlation</i> between `level of PSA` and a number of clinical measures  for men who were about to undergo a radical prostatectomy. The measures are `cancer volume`, `patient age`, the `amount of bening prostatic hyperplasia`, `seminal vesicle invasion`, `capsular penetration` and `Gleason score`. 
+
+<br><hr><br>
+
+We start by loading the necessary packages in R. We choose `warning=FALSE` and `message=FALSE` to keep the output clean.
+
+```{r, warning=FALSE, message=FALSE}
+library(dplyr)
+library(faraway)
+library(lmtest)
+library(MASS)
+```
+
+
+We take a first look at the data:
+```{r}
+psa.data = read.table("prostate.txt", header=FALSE)
+head(psa.data)
+```
+
+We notice that the columns have no labels. It is hard to interpret a model with generic notation. So, we change the names of the variables and give them a code name that reminds us of the nature of the variables. For that purpose, we use the `rename` function from the `dplyr` library.
+
+```{r}
+psa.data = rename(psa.data, ID = V1)
+psa.data = rename(psa.data, psalevel = V2)
+psa.data = rename(psa.data, cancervolume = V3)
+psa.data = rename(psa.data, prostateweight = V4)
+psa.data = rename(psa.data, age = V5)
+psa.data = rename(psa.data, hyperplasia = V6)
+psa.data = rename(psa.data, svi = V7)
+psa.data = rename(psa.data, capsular = V8)
+psa.data = rename(psa.data, gleason = V9)
+
+head(psa.data)
+```
+
+
+Before starting to build regression models, we take a closer look at the variables. We want to see the type of variables we have and whether there is a linear relation with the chosen response, `psalevel` according to the description of the problem.
+
+```{r}
+summary(psa.data)
+
+pairs(psa.data)
+```
+
+The variable  `svi` is the only categorical variable in the data set, and has levels 0 and 1. Although we have not taked about categorial predictors yet, we will keep it in the model and treat it like any other variable.
+
+We fit our  full model to get an idea of the fit of the regression line:
+
+```{r}
+full.model =  lm(psalevel ~ cancervolume + prostateweight + age + hyperplasia + svi + capsular + gleason, data=psa.data)
+summary(full.model)
+```
+
+The $R^2$ is not high, and among all variables only the `cancervolume` seems to be statistically significant. We check the correlation matrix of the predictors to identify presence of collinearity.
+
+```{r}
+cor(psa.data[,-c(1,2)])
+```
+
+We observe that `cancervolume` is mildly correlated with `svi`, `capsular` and `gleason.` We cannot make any conclusions, so we proceed with our analysis.
+
+
+We now start removing variables that are not statistically significant from the model. We either remove them one-by-one or we use the partial $F$ to test "out" more than one variables.
+
+```{r}
+
+model1 =  lm(psalevel ~ cancervolume  + age + hyperplasia + svi + capsular + gleason, data=psa.data)
+summary(model1)
+
+model2 =  lm(psalevel ~ cancervolume  + age + hyperplasia + svi  + gleason, data=psa.data)
+summary(model2)
+
+model1b =  lm(psalevel ~ cancervolume  + age + hyperplasia + svi  + gleason , data=psa.data)
+summary(model1b)
+anova(model1b, full.model)
+```
+
+For illustration purposes, we will continue with `model 2` to check model assumptions.
+
+We start with detection of unusual observations:
+
+```{r}
+## Diagnostics for model 2
+
+n=dim(psa.data)[1]; # sample size
+p=6; 
+
+# Compute Leverages
+lev=influence(model2)$hat
+
+# Determine which exceed the 2p/n threshold
+newlev = lev[lev>2*p/n]
+length(newlev)/n
+
+
+
+# Prepare a half-normal plot 
+halfnorm(lev, 6, labs=as.character(1:length(newlev)), ylab="Leverages")
+
+# Compute Studentized Residuals
+jack=rstudent(model2); 
+
+# The critical value WITH Bonferroni correction is
+qt(.05/(2*n), n-p-1) 
+
+# The critical value WITHOUT Bonferroni correction is
+qt(.05/2, n-p-1)
+
+# Sort the residuals indescending order to find outliers (if any)
+sort(abs(jack), decreasing=TRUE)[1:10] 
+#There are 2 outliers: #96, #97
+
+# Compute Cook's Distance
+cook = cooks.distance(model2)
+# Extract max Cook's Distance
+max(cook)
+
+# Prepare a Half Normal Plot of Cook's distances
+halfnorm(cook, 6, labs=as.character(1:length(cook)), ylab="Cook's distances")
+```
+
+We conclude that there are several high leverage points, but none of them is a "bad" high leverage point. We also have two outliers (obs #96, #97), but we have no influential points.
+
+We proceed with checking constant variance and normality assumptions:
+
+```{r}
+# Checking Homoskedasticity
+
+plot(model2, which=1)
+bptest(model2) 
+```
+
+Both the graphical check and the statistical Breusch-Pagan test indicate that the variance is not constant.
+
+```{r}
+# Normality
+
+plot(model2, which=2)
+hist(model2$residuals)
+ks.test(residuals(model2), y=pnorm)
+```
+
+Both  graphical checks and the statistical Kolmogorov-Smirnov test indicate that the normality assumption is not satisfied.
+
+In order to fix one or more of the assumptions we consider transforming the response. We start  by looking at a Box-Cox transformation:
+
+
+```{r}
+# Box Cox Transformation
+model.transformation = boxcox(model2, lambda=seq(-2, 2, length=400))
+```
+
+Since $\lambda=0$ is close to the  lower limit of the interval, and since a `log` transform is a transformation that is easy to manipulate and interpret, we proceed with the `log` transformation of the response.
+
+So, the next step here is to repeat all the analysis from scratch. You will observe that we will have a different model now.
+
+```{r}
+model3 = lm(log(psalevel) ~ cancervolume + prostateweight + age + hyperplasia + svi + capsular + gleason, data=psa.data)
+summary(model3)
+
+model4 = lm(log(psalevel) ~ cancervolume + prostateweight  + hyperplasia + svi + capsular + gleason, data=psa.data)
+summary(model4)
+
+model5 = lm(log(psalevel) ~ cancervolume   + hyperplasia + svi + capsular + gleason, data=psa.data)
+summary(model5)
+
+model6 = lm(log(psalevel) ~ cancervolume   + hyperplasia + svi  + gleason, data=psa.data)
+summary(model6)
+```
+
+
+The model containing `cancervolume`, `hyperplasia`, `svi`  and `gleason` is the selected model. We perform diagnostics (again) to check whether the assumptions are now satisfied:
+
+```{r}
+
+## Diagnostics for Model 6
+n=dim(psa.data)[1]; # sample size
+p=5; 
+
+# Compute Leverages
+lev=influence(model6)$hat
+
+# Determine which exceed the 2p/n threshold
+newlev = lev[lev>2*p/n]
+length(newlev)/n
+
+
+
+# Prepare a half-normal plot 
+halfnorm(lev, 6, labs=as.character(1:length(newlev)), ylab="Leverages")
+
+# Compute Studentized Residuals
+jack=rstudent(model6); 
+
+# The critical value WITH Bonferroni correction is
+qt(.05/(2*n), n-p-1) 
+
+# Sort the residuals indescending order to find outliers (if any)
+sort(abs(jack), decreasing=TRUE)[1:10] 
+
+
+# Compute Cook's Distance
+cook = cooks.distance(model6)
+# Extract max Cook's Distance
+max(cook)
+
+# Prepare a Half Normal Plot of Cook's distances
+halfnorm(cook, 6, labs=as.character(1:length(cook)), ylab="Cook's distances")
+
+```
+
+In the transformed model, we have no outliers.
+
+
+
+
+```{r}
+# Checking Homoskedasticity
+
+plot(model6, which=1)
+bptest(model6) 
+```
+
+The variance is now constant!
+
+```{r}
+# Normality
+plot(model6, which=2)
+hist(model6$residuals)
+ks.test(residuals(model6), y=pnorm)
+```
+
+and the normality assumption now holds!
+
+We also check the added-variables plots to see whether a transformation of any pf the predictors is needed.
+
+```{r}
+
+# Added Variables Plots
+# model6 = lm(log(psalevel) ~ cancervolumne   + hyperplasia + svi  + gleason, data=psa.data)
+
+model6a1 = lm(log(psalevel) ~ hyperplasia + svi  + gleason, data=psa.data)
+model6a2 = lm(cancervolume ~     hyperplasia + svi  + gleason, data=psa.data)
+reg.a = lm(model6a1$residuals ~ model6a2$residuals)
+
+model6b1 = lm(log(psalevel) ~ cancervolume  + svi  + gleason, data=psa.data)
+model6b2 = lm(hyperplasia ~ cancervolume + svi  + gleason, data=psa.data)
+reg.b = lm(model6b1$residuals ~ model6b2$residuals)
+
+model6c1 = lm(log(psalevel) ~ cancervolume  +hyperplasia   + gleason, data=psa.data)
+model6c2 = lm(svi ~ cancervolume + hyperplasia   + gleason, data=psa.data)
+reg.c = lm(model6c1$residuals ~ model6c2$residuals)
+
+
+model6d1 = lm(log(psalevel) ~ cancervolume  + hyperplasia   + svi , data=psa.data)
+model6d2 = lm(gleason ~ cancervolume + hyperplasia   + svi , data=psa.data)
+reg.d = lm(model6d1$residuals ~ model6d2$residuals)
+
+
+# Added variables plots
+
+plot(model6a2$residuals, model6a1$residuals, xlab="Cancer Volume residuals", ylab="log(PSA) residuals") 
+abline(reg.a, col="red")
+
+plot(model6b2$residuals, model6b1$residuals, xlab="Hyperplasia residuals", ylab="log(PSA) residuals") 
+abline(reg.b, col="red")
+
+plot(model6c2$residuals, model6c1$residuals, xlab="SVI residuals", ylab="log(PSA) residuals") 
+abline(reg.c, col="red")
+
+plot(model6d2$residuals, model6d1$residuals, xlab="Gleason residuals", ylab="log(PSA) residuals") 
+abline(reg.d, col="red")
+
+```
+
+All the plots show that the points are randomly scattered around the fitted lines, so we conclude that no transformations of the response are needed.
+
+In this case, we have managed to find a suitable model to fit the data that explains the variation in the response in an adequate way.
+
+So, what is next?

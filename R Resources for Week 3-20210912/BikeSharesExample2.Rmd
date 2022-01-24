@@ -1,0 +1,107 @@
+---
+title: "Partial F Tests & Permutation Tests"
+author: "Alexandra Chronopoulou"
+date: "Lecture 6 Examples"
+output: html_document
+---
+
+
+```{r , results='hide'}
+bikeshares <-  read.csv("BikeShares.csv", header=TRUE)
+dim(bikeshares)
+head(bikeshares)
+# We remove columns 1,  7, 8, 9, 10:
+bikeshares.reg = bikeshares[,c(-1,-7,-8,-9,-10)]
+head(bikeshares.reg)
+```
+
+<br>
+<hr>
+<br>
+
+#### Partial F Tests
+
+We start by fitting the Full model, i.e. the model that contains all the model parameters under consideration: `Real Temperature`, `Feels Like Temperature`, `Wind Speed` and `Humidity.`
+```{r} 
+bikeshare.mlr.full = lm(cnt ~ t1 + t2+ hum + wind_speed, data=bikeshares.reg )
+```
+
+Next, we fit the model without the temperature variables (the reduced model):
+```{r}
+bikeshare.mlr.reduced = lm(cnt ~ hum + wind_speed , data=bikeshares.reg )
+```
+
+The partial $F$ test hypothesis is formulated as:
+\[
+\begin{cases}
+&H_0: \beta_1 = \beta_2 = 0\\
+&H_{\alpha}: \text{ at least one } \beta \neq 0
+\end{cases}
+\]
+
+We use tha `anova` function to perform the test:
+```{r}
+anova(bikeshare.mlr.reduced, bikeshare.mlr.full)
+```
+
+We can also perform the test "by hand" as follows:
+```{r}
+rss.full = sum(bikeshare.mlr.full$res^2)
+rss.full
+# You can also compute it with
+deviance(bikeshare.mlr.full)
+rss.reduced = sum(bikeshare.mlr.reduced$res^2)
+rss.reduced
+deviance(bikeshare.mlr.reduced)
+Fstat = (rss.reduced - rss.full)/2/(rss.full/17409)
+Fstat
+1-pf(Fstat, 2, 17409, lower.tail = FALSE)
+```
+
+
+
+#### Permutation Tests 
+
+
+When the normal assumption is questionable, we can use a permutation test.
+
+Suppose our  hypotheses are
+\[\begin{cases}
+&H_0: bikeshares \sim humidity + wind_speed\\
+&H_{\alpha}: bikeshares \sim RealTemp + FeelsLikeTemp + humidity + wind_speed
+\end{cases}\]
+
+Let’s use $F$ test statistic from the full model as the test statistic: If `RealTemp` and `FeelsLikeTemp` are indeed relevant to `bikeshares`, we would expect the $F$ test statistic to be large. So a large $F$ test statistic (from the full model) supports $H_{\alpha}$ (i.e., we know the rejection region).
+
+Now the goal is to find the distribution of the $F$ test statistic under the null hypothesis (**without using any normal assumption**). How can we get a data set, which also involves bike shares with all the four variables, and which looks like a data set from $H_0$?
+
+Recall that under $H_0$, `RealTemp` and `FeelsLikeTemp` are irrelevant. In our data, we have 17414 pairs of `(RealTemp, FeelsLikeTemp)`, each corresponding to a Bike Share. What if we randomly assign a pair of `(RealTemp, FeelsLikeTemp)` associated with one bike share to another bike share (repeat this for all 17414 pairs), and then re-fit the full model? The inference based on this new data set should nott be affected that much, if `(RealTemp, FeelsLikeTemp)` is truly irrelevant to `bikeshares`. This is the idea behind the permutation test.
+
+
+```{r}
+n.iter = 2000;
+A=numeric(5)
+A[1]=2
+A
+fstats = numeric(n.iter);
+class(bikeshares.reg)
+head(bikeshares.reg)
+for(i in 1:n.iter){
+  newbikes = bikeshares.reg;
+  newbikes[, c(3,4)] = bikeshares.reg[sample(17414), c(3,4)];
+  ge = lm(cnt ~ t1 + t2+ hum + wind_speed, data=newbikes);
+  fstats[i] = summary(ge)$fstat[1]
+}
+
+# Estimated p-value
+length(fstats[fstats > summary(bikeshare.mlr.full)$fstat[1]])/n.iter
+
+## Sample Function
+sample(1:5)
+sample(1:5)
+sample(1:5)
+sample(1:5)
+
+
+```
+

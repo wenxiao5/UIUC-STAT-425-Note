@@ -1,0 +1,130 @@
+---
+title: "Final Project R Code"
+author: "Wenxiao Yang"
+date: "12/7/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+# R Code
+```{r}
+bubble.data=read.csv("bubblewrap.csv",header=TRUE)
+new.data=transform(bubble.data,line_speed=as.factor(line_speed),loading=as.factor(loading))
+new.data
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(rate~line_speed, new.data)
+plot(rate~loading, new.data)
+```
+The factor effects model is as follows:
+$$Y_{ijk}= \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij}+\varepsilon_{ijk} $$
+
+```{r}
+par(mfrow=c(1,2))
+with(new.data, interaction.plot(line_speed,loading,rate))
+with(new.data, interaction.plot(loading,line_speed,rate))
+```
+Interactions are present.
+
+## F-test
+```{r}
+model1=lm(rate~line_speed*loading,new.data)
+summary(model1)
+anova(model1)
+```
+
+Since the $p$-values are large, we conclude that the interaction terms are not statistically significant. So, we can remove it from the model.
+
+```{r}
+model2=lm(rate~line_speed+loading,new.data)
+summary(model2)
+anova(model2)
+```
+
+
+## Check Assumptions for Model 2
+```{r}
+par(mfrow=c(1,2))
+plot(model2,which=1:2)
+```
+### Check Homoscedasticity of Model 2
+```{r}
+library(lmtest)
+bptest(model2)
+```
+Homoscedasticity holds.
+
+### Check Normality of Model 2
+```{r}
+ks.test(residuals(model2), y=pnorm)
+```
+Normality doesn’t hold. Try Box-cox transformation.
+
+## Box-cox transformation
+```{r}
+library(MASS)
+```
+
+```{r}
+min(new.data$rate)
+```
+```{r}
+model.transformation=boxcox(model2,lambda=seq(3, 6, by=0.1))
+```
+```{r}
+model.transformation$x[model.transformation$y==max(model.transformation$y)]
+```
+```{r}
+par(mfrow=c(1,2))
+with(new.data, interaction.plot(line_speed,loading,(rate^5.5-1)/5.5))
+with(new.data, interaction.plot(loading,line_speed,(rate^5.5-1)/5.5))
+```
+```{r}
+model.bc=lm((rate^5.5-1)/5.5~line_speed*loading,new.data)
+summary(model.bc)
+anova(model.bc)
+```
+We can find the interaction term is still insignificant.
+```{r}
+model3=lm((rate^5.5-1)/5.5~line_speed+loading,new.data)
+summary(model3)
+anova(model3)
+```
+## Check Assumptions for Model 3
+```{r}
+par(mfrow=c(1,2))
+plot(model3,which=1:2)
+```
+### Check Homoscedasticity of Model 3
+```{r}
+bptest(model3)
+```
+Homoscedasticity holds.
+
+### Check Normality of Model 3
+```{r}
+ks.test(residuals(model3), y=pnorm)
+```
+The Box-Cox transformation can't fix Normality problem. However, the model3's $R^2$ is higher, so we use model3.
+
+
+## Tukey’s Paired Comparison
+```{r}
+TukeyHSD(aov((rate^5.5-1)/5.5~line_speed+loading,new.data), "line_speed")
+```
+
+```{r}
+myCIs.line_speed = TukeyHSD(aov((rate^5.5-1)/5.5~line_speed+loading,new.data), "line_speed")
+plot(myCIs.line_speed)
+```
+```{r}
+TukeyHSD(aov((rate^5.5-1)/5.5~line_speed+loading,new.data), "loading")
+```
+
+```{r}
+myCIs.loading = TukeyHSD(aov((rate^5.5-1)/5.5~line_speed+loading,new.data), "loading")
+plot(myCIs.loading)
+```

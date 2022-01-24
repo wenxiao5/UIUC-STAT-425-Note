@@ -1,0 +1,140 @@
+---
+title: "HW7 Wenxiao Yang"
+output: html_document
+---
+# Problem 1
+```{r}
+quest.data=read.csv("questionnaire.csv",header=TRUE)
+head(quest.data)
+```
+## (a)
+"blue" is level 0; "green" is level 1.
+### (i)
+$$\text{rate}=\beta_0+\beta_1\text{lot.size}+\varepsilon$$
+### (ii)
+$$\text{rate}=(\beta_0+\beta_2)+(\beta_1+\beta_3)\text{lot.size}+\varepsilon$$
+## (b)
+$$\left\{\begin{matrix}
+  H_0:&\beta_3=0\\
+  H_\alpha:&\beta_3\neq 0
+\end{matrix}\right.$$
+```{r}
+quest.full=lm(rate~lot.size*color,quest.data)
+anova(quest.full)
+```
+We use partial F-test ANOVA to test if $\text{lot.size*color}$ is significant. Since the p-value of the test is 0.87111, we fail to reject $H_0$. So, we can conclude that the interaction term $\text{lot.size*color}$ is not significant.
+
+## (c)
+Let's test whether $\beta_2$ is significant in the addictive model
+$$\left\{\begin{matrix}
+  H_0:&\beta_2=0\\
+  H_\alpha:&\beta_2\neq 0
+\end{matrix}\right.$$
+```{r}
+quest.add=lm(rate~lot.size+color,quest.data)
+anova(quest.add)
+```
+According to the partial F-test result, the p-value of the test is $0.07946$, we fail to reject $H_0$. So, we can conclude the $\text{color}$ is not significant in the model. Which means the response rate doesn't vary accroding to different colors.
+
+# Problem 2
+## (a)
+```{r}
+library(ISLR)
+data(Hitters)
+head(Hitters)
+data.reg=Hitters[,c(-14,-15,-20)]
+summary(data.reg)
+```
+```{r}
+library(leaps)
+Hitters.leaps=regsubsets(Salary~.,data=data.reg,nvmax=16)
+rs=summary(Hitters.leaps)
+rs
+```
+
+### (i)adjusted $R^2$
+```{r}
+rs$adjr2
+```
+```{r}
+rs$which[which.max(rs$adjr2),]
+```
+```{r}
+sum(rs$which[which.max(rs$adjr2),])
+```
+The optimal number of parameters is 10 (89 predictors and 1 intercept).
+
+### (ii)$C_p$
+```{r}
+rs$cp
+```
+```{r}
+rs$which[which.min(rs$cp),]
+```
+```{r}
+sum(rs$which[which.min(rs$cp),])
+```
+The optimal number of parameters is 10 (9 predictors and 1 intercept).
+
+### (iii)AIC
+```{r}
+n=dim(data.reg)[1]
+m=2:17
+Aic=n*log(rs$rss/n)+2*m
+Aic
+```
+```{r}
+rs$which[which.min(Aic),]
+```
+
+```{r}
+sum(rs$which[which.min(Aic),])
+```
+The optimal number of parameters is 10 (9 predictors and 1 intercept).
+
+### (iv)$BIC$
+```{r}
+rs$bic
+```
+```{r}
+rs$which[which.min(rs$bic),]
+```
+```{r}
+sum(rs$which[which.min(rs$bic),])
+```
+The optimal number of parameters is 8 (7 predictors and 1 intercept).
+
+## (b)
+```{r}
+Hitters.full=lm(Salary~.,data=data.reg)
+step(Hitters.full,direction = "backward",k=log(n))
+```
+1. remove $RBI$.
+2. remove $CHits$.
+3. remove $Years$.
+4. remove $CHmRun$.
+5. remove $HmRun$.
+6. remove $Errors$.
+7. remove $Runs$.
+8. remove $Assists$.
+9. remove $CAtBat$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
